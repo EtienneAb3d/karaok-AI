@@ -5,7 +5,7 @@ Karaoke Player / Editor with automatic clip creation from any song file (mp3, og
 
 # Included: kaiDJ
 
-**kaiDJ** is a minimalist and easy to use, but yet powerful and versatil DJ Party Player.
+**kaiDJ** is a minimalist and easy to use, but yet powerful and versatile DJ Party Player.
 - multi-sound cards support. 2 players with auto-mix between songs,1 pre-listen player. 
 - indexing of thousands of songs in a single efficient database (mp3, ogg, wav, etc).
 - direct search / selection over all songs in the database. Management of song categories.
