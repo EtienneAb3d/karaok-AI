@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="1920"
+   height="1080"
+   viewBox="0 0 508 285.75"
+   version="1.1"
+   id="svg5"
+   inkscape:version="1.1.2 (0a00cf5339, 2022-02-04)"
+   sodipodi:docname="kaiDJ.svg"
+   inkscape:export-filename="/home/cubaix/GITREPO/karaok-AI/src/com/cubaix/kaiDJ/img/Icon.png"
+   inkscape:export-xdpi="9.1700001"
+   inkscape:export-ydpi="9.1700001"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview7"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:document-units="mm"
+     showgrid="false"
+     units="px"
+     inkscape:zoom="0.42961102"
+     inkscape:cx="955.51553"
+     inkscape:cy="477.17584"
+     inkscape:window-width="1920"
+     inkscape:window-height="1034"
+     inkscape:window-x="0"
+     inkscape:window-y="25"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer2" />
+  <defs
+     id="defs2" />
+  <g
+     inkscape:groupmode="layer"
+     id="layer2"
+     inkscape:label="Icon"
+     style="display:inline">
+    <rect
+       style="fill:#792c7d;fill-opacity:1;stroke:#e2b8e4;stroke-width:3;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="rect32538"
+       width="440"
+       height="440"
+       x="34"
+       y="-77.125" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:176.389px;line-height:1.25;font-family:sans-serif;fill:#e2b8e4;fill-opacity:1;stroke:none;stroke-width:3;stroke-opacity:1;stroke-miterlimit:4;stroke-dasharray:none"
+       x="30.32703"
+       y="208.15961"
+       id="text32624"
+       inkscape:export-filename="/home/cubaix/GITREPO/karaok-AI/src/com/cubaix/kaiDJ/img/LogoSmall.png"
+       inkscape:export-xdpi="7.5"
+       inkscape:export-ydpi="7.5"><tspan
+         sodipodi:role="line"
+         id="tspan32622"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:176.389px;font-family:RobotoBold;-inkscape-font-specification:RobotoBold;fill:#e2b8e4;fill-opacity:1;stroke:none;stroke-width:3;stroke-opacity:1;stroke-miterlimit:4;stroke-dasharray:none"
+         x="30.32703"
+         y="208.15961">kaiDJ</tspan></text>
+  </g>
+  <g
+     inkscape:label="kaiDJ"
+     inkscape:groupmode="layer"
+     id="layer1"
+     style="display:none">
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:176.389px;line-height:1.25;font-family:sans-serif;fill:#000000;fill-opacity:1;stroke:#e2b8e4;stroke-width:3;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       x="30.32703"
+       y="208.15961"
+       id="text2102"
+       inkscape:export-filename="/home/cubaix/GITREPO/karaok-AI/src/com/cubaix/kaiDJ/img/LogoSmall.png"
+       inkscape:export-xdpi="7.5"
+       inkscape:export-ydpi="7.5"><tspan
+         sodipodi:role="line"
+         id="tspan2100"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:176.389px;font-family:RobotoBold;-inkscape-font-specification:RobotoBold;fill:#792c7d;fill-opacity:1;stroke:#e2b8e4;stroke-width:3;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         x="30.32703"
+         y="208.15961">kaiDJ</tspan></text>
+  </g>
+</svg>

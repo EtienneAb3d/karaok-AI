@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="lib/common/CodeAffinSWT.jar"/>
+	<classpathentry kind="lib" path="lib/common/commons-logging-api.jar"/>
+	<classpathentry kind="lib" path="lib/common/hsqldb.jar"/>
+	<classpathentry kind="lib" path="lib/common/jakarta-regexp-1.5.jar"/>
+	<classpathentry kind="lib" path="lib/common/JID3.jar"/>
+	<classpathentry kind="lib" path="lib/common/jid3lib-0.5.4.jar"/>
+	<classpathentry kind="lib" path="lib/common/jl1.0.1.jar"/>
+	<classpathentry kind="lib" path="lib/common/mp3spi1.9.4.jar"/>
+	<classpathentry kind="lib" path="lib/common/myid3.jar"/>
+	<classpathentry kind="lib" path="lib/common/tritonus_share.jar"/>
+	<classpathentry kind="lib" path="lib/linux/swt-64b.jar"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>
