@@ -12,6 +12,6 @@
 	<classpathentry kind="lib" path="lib/common/mp3spi1.9.4.jar"/>
 	<classpathentry kind="lib" path="lib/common/myid3.jar"/>
 	<classpathentry kind="lib" path="lib/common/tritonus_share.jar"/>
-	<classpathentry kind="lib" path="lib/linux/swt-64b.jar"/>
+	<classpathentry kind="lib" path="lib/swt-linux.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

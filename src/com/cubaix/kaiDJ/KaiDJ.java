@@ -46,15 +46,20 @@ import com.cubaix.kaiDJ.xml.ConfigLoader;
 // Main class, for all in JDJ
 public class KaiDJ {
 	static final public String _VERSION = "0.5.0";
+	public static String kaiDir = System.getProperty("user.home")+File.separatorChar+"karaok-AI";
+	static {
+		if(!new File(kaiDir).exists()) {
+			new File(kaiDir).mkdirs();
+		}
+	}
+	String configPath = kaiDir+"/config.xml";
+	String currentPLPath = System.getProperty("user.home");
 
 	public Display display = null;
 
 	public Shell shell = null;
 
 	public GC mainGC = null;
-
-	// Config
-	String configPath = "./config.xml";
 
 	// Colors
 	public Color whiteC;
@@ -135,8 +140,6 @@ public class KaiDJ {
 	public Db db;
 
 	Id3Analyzer analyzer;
-
-	String currentPLPath = System.getProperty("user.home");
 
 	// Interface groups
 	public SearchManager managerSearch;
@@ -962,7 +965,7 @@ public class KaiDJ {
 					System.out.println("Db cleaned in : " + Player.formatTimeMs(new Date().getTime() - aTime));
 					// Try to load last pl
 					aTime = new Date().getTime();
-					managerPlay.load("./last.jdj", true);
+					managerPlay.load(kaiDir+"/last.jdj", true);
 					managerPlay.pl.listTC.needRedraw();
 					System.out.println("Last PL loaded in : " + Player.formatTimeMs(new Date().getTime() - aTime));
 					// Start analyzer
@@ -1028,7 +1031,7 @@ public class KaiDJ {
 			} catch (Throwable t) {
 				t.printStackTrace(System.err);
 			}
-			managerPlay.pl.save("./last.jdj");
+			managerPlay.pl.save(kaiDir+"/last.jdj");
 			display.dispose();
 		} catch (Throwable t) {
 			t.printStackTrace(System.err);
