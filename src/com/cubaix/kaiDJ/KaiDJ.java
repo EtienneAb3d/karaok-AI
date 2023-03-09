@@ -46,6 +46,8 @@ import com.cubaix.kaiDJ.xml.ConfigLoader;
 // Main class, for all in JDJ
 public class KaiDJ {
 	static final public String _VERSION = "0.5.0";
+	public static final boolean _DEBUG_PAINT = true;
+	
 	public static String kaiDir = System.getProperty("user.home")+File.separatorChar+"karaok-AI";
 	static {
 		if(!new File(kaiDir).exists()) {
@@ -195,6 +197,9 @@ public class KaiDJ {
 	 * 
 	 */
 	void paint() {
+		if(KaiDJ._DEBUG_PAINT) {
+			System.out.println("KAIDJ.paint()");
+		}
 		synchronized (mainGC) {
 			Rectangle aRect = shell.getBounds();
 			mainGC = new GC(shell);

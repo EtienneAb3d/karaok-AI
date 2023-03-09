@@ -20,7 +20,8 @@ public class LogoPanel extends TimedCanvas {
 	final int lineHeight = 15;
 
 	Rectangle panelBounds = null;
-
+	Image dblBuf = null;
+	GC dblBufGC;
 
 	public LogoPanel(KaiDJ aParentJDJ, Composite parent, int style) {
 		super(aParentJDJ, parent, style);
@@ -28,8 +29,10 @@ public class LogoPanel extends TimedCanvas {
 		final LogoPanel aThis = this;
 		addPaintListener(new PaintListener() {
 			public void paintControl(PaintEvent aPE) {
-				panelBounds = aThis.getClientArea();
-				// panelGC = aPE.gc;
+				panelBounds = getClientArea();
+				GC aPlGC = new GC(aThis);
+				paintDbl(aPlGC);
+				aPlGC.dispose();
 				needRedraw();
 			}
 		});
@@ -54,10 +57,10 @@ public class LogoPanel extends TimedCanvas {
 //		}
 	}
 
-	/* (non-Javadoc)
-	 * @see em.jDJ.TimedCanvas#paint()
-	 */
-	protected void paint() {
+	protected void paintTimed() {
+		if(KaiDJ._DEBUG_PAINT) {
+			System.out.println("LOGOPANEL.paintTimed()");
+		}
 		if (panelBck == null) {
 			loadImg();
 		}
@@ -65,35 +68,59 @@ public class LogoPanel extends TimedCanvas {
 			return;
 		}
 		try {
-			GC panelGC = new GC(this);
+			Rectangle aRectDbl = null;
+			if (dblBuf != null) {
+				aRectDbl = dblBuf.getBounds();
+			}
+			if (dblBuf == null || panelBounds.width != aRectDbl.width || panelBounds.height != aRectDbl.height) {
+				if (dblBuf != null) {
+					dblBuf.dispose();
+					dblBuf = null;
+					dblBufGC.dispose();
+				}
+				dblBuf = new Image(parentKDJ.display, panelBounds);
+				dblBufGC = new GC(dblBuf);
+			}
+
 			Rectangle aImgR = panelBck.getBounds();
-			panelGC.setClipping(panelBounds.x, panelBounds.y, panelBounds.width, panelBounds.height);
-			panelGC.setForeground(parentJDJ.blackC);
-			panelGC.setBackground(parentJDJ.mainBckC);
-			panelGC.fillRectangle(panelBounds);
+			dblBufGC.setClipping(panelBounds.x, panelBounds.y, panelBounds.width, panelBounds.height);
+			dblBufGC.setForeground(parentJDJ.blackC);
+			dblBufGC.setBackground(parentJDJ.mainBckC);
+			dblBufGC.fillRectangle(panelBounds);
 			if (help == null) {
-				panelGC.drawImage(panelBck, panelBounds.x /* + (panelBounds.width - aImgR.width) / 2 */, panelBounds.y);
+				dblBufGC.drawImage(panelBck, panelBounds.x /* + (panelBounds.width - aImgR.width) / 2 */, panelBounds.y);
 			} else {
-				// panelGC.drawImage(panelTransBck, panelBounds.x + (panelBounds.width - aImgR.width) / 2, panelBounds.y);
-				panelGC.drawImage(panelBck, panelBounds.x, panelBounds.y);
+				// dblBufGC.drawImage(panelTransBck, panelBounds.x + (panelBounds.width - aImgR.width) / 2, panelBounds.y);
+				dblBufGC.drawImage(panelBck, panelBounds.x, panelBounds.y);
 				StringTokenizer aTok = new StringTokenizer(help, "\n");
 				int aPosY = 0;
-				panelGC.setForeground(parentJDJ.playerC);
-				// panelGC.drawText("** HELP **", aImgR.width, aPosY, true);
+				dblBufGC.setForeground(parentJDJ.playerC);
+				// dblBufGC.drawText("** HELP **", aImgR.width, aPosY, true);
 				aPosY += lineHeight;
 				while (aTok.hasMoreTokens()) {
 					String aStr = aTok.nextToken();
-					panelGC.drawText(aStr, panelBounds.x + aImgR.width, panelBounds.y + aPosY, true);
+					dblBufGC.drawText(aStr, panelBounds.x + aImgR.width, panelBounds.y + aPosY, true);
 					aPosY += lineHeight;
 				}
 			}
-			panelGC.dispose();
+
+			// Draw final image
+			GC aPlGC = new GC(this);
+			paintDbl(aPlGC);
+			aPlGC.dispose();
 		} catch (Throwable t) {
 			System.err.println("Can't paint logo : " + t);
 			t.printStackTrace(System.err);
 		}
 	}
 	
+	void paintDbl(GC aPlGC) {
+		if(dblBuf == null) {
+			return;
+		}
+		aPlGC.drawImage(dblBuf, 0, 0);
+	}
+
 	//EM 15/11/2008
 	static final int _SOUNDPROFILESIZE = 128;
 	float[] soundProfile1 = new float[_SOUNDPROFILESIZE];
@@ -138,6 +165,9 @@ public class LogoPanel extends TimedCanvas {
 	
 	static final int _SOUNDPROFILEHEIGHT = 20;
 	void paintSoundProfile(){
+		if(KaiDJ._DEBUG_PAINT) {
+			System.out.println("LOGOPANEL.paintSoundProfile()");
+		}
 		if(panelBck == null || panelBounds == null){
 			return;
 		}

@@ -554,7 +554,11 @@ public class Player extends TimedCanvas implements BasicPlayerListener, KJDigita
 	/**
 	 * 
 	 */
-	protected void paint() {
+	protected void paintTimed() {
+		if(KaiDJ._DEBUG_PAINT) {
+			System.out.println("PLAYER.paintTimed()");
+		}
+
 		if (playerBck == null) {
 			loadImg();
 		}

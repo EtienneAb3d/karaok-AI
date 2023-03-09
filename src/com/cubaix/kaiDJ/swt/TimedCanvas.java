@@ -91,7 +91,7 @@ public class TimedCanvas extends Canvas {
 								parentKDJ.display.asyncExec(new Runnable() {
 									public void run() {
 										try {
-											paint();
+											paintTimed();
 										} catch (Throwable t) {
 										}// Could be some errors at shut down
 										// time because of
@@ -117,7 +117,7 @@ public class TimedCanvas extends Canvas {
 	/**
 	 * 
 	 */
-	protected void paint() {
+	protected void paintTimed() {
 	}
 
 	public String getToolTip() {

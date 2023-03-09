@@ -165,6 +165,9 @@ public class KaiScrollBar extends Canvas implements MouseWheelListener {
 	}
 	
 	void paint(GC aGC) {
+		if(KaiDJ._DEBUG_PAINT) {
+			System.out.println("KaiScrollBar.paint()");
+		}
 		Rectangle aRect = getBounds();
 		aGC.setBackground(pageIncrementC);
 		aGC.fillRectangle(0,0,aRect.width,aRect.height);

@@ -6,6 +6,7 @@ import java.util.TreeSet;
 import java.util.Vector;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.ControlListener;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.events.MouseEvent;
@@ -58,7 +59,6 @@ public class PlayList extends Composite {
 	NumberFormat ddddNF;
 
 	Image dblBuf = null;
-
 	GC dblBufGC;
 
 	Rectangle plBounds;
@@ -118,11 +118,12 @@ public class PlayList extends Composite {
 		setBackground(parentKDJ.mainBckC);
 //		setRedraw(false);
 		
-		final PlayList aMe = this;
+		final PlayList aThis = this;
 		listTC = new TimedCanvas(parentKDJ,this,SWT.NONE) {
 			@Override
-			protected void paint() {
-				aMe.paintDbl();
+			protected void paintTimed() {
+				// TODO Auto-generated method stub
+				aThis.paintTimed();
 			}
 		};
 		
@@ -899,7 +900,10 @@ public class PlayList extends Composite {
 	/**
 	 * 
 	 */
-	void paintDbl() {
+	protected void paintTimed() {
+		if(KaiDJ._DEBUG_PAINT) {
+			System.out.println("PLAYLIST.paintTimed()");
+		}
 		if (plBounds == null) {
 			return;
 		}
