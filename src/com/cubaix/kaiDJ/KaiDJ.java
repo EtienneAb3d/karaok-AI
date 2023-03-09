@@ -103,7 +103,9 @@ public class KaiDJ {
 
 
 	// Players
+	public Player playerPre = null;
 	public Player player1 = null;
+	public Player player2 = null;
 
 	//EM 06/07/2008 : stop-after button
 	KaiButton stopAfterB;
@@ -113,9 +115,6 @@ public class KaiDJ {
 	KaiButton showSoundProfileB;
 	boolean showSoundProfile = false;
 
-	public Player player2 = null;
-
-	public Player playerPre = null;
 
 	public int soundCard1 = -1;
 
@@ -206,6 +205,9 @@ public class KaiDJ {
 			mainGC.setClipping(0, 0, aRect.width, aRect.height);
 			mainGC.setBackground(mainBckC);
 			mainGC.fillRectangle(0, 0, aRect.width, aRect.height);
+			if (playerPre != null) {
+				playerPre.needRedraw();
+			}
 			if (player1 != null) {
 				player1.needRedraw();
 			}

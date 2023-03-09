@@ -113,7 +113,7 @@ public class Player extends TimedCanvas implements BasicPlayerListener, KJDigita
 				playerBounds = getClientArea();
 				// playerGC = aPE.gc;
 				paintDbl(aPE.gc);
-				needRedraw();
+//				needRedraw();
 			}
 		});
 		// playerGC = new GC(this);

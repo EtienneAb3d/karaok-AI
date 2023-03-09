@@ -16,6 +16,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 
 import com.cubaix.kaiDJ.db.SongDescr;
+import com.cubaix.kaiDJ.swt.PlayListListener;
 
 public class CategoryManager extends Composite {
 	KaiDJ parentJDJ;

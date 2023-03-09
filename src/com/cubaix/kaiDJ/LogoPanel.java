@@ -33,7 +33,7 @@ public class LogoPanel extends TimedCanvas {
 				GC aPlGC = new GC(aThis);
 				paintDbl(aPlGC);
 				aPlGC.dispose();
-				needRedraw();
+//				needRedraw();
 			}
 		});
 		

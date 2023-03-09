@@ -1,4 +1,4 @@
-package com.cubaix.kaiDJ;
+package com.cubaix.kaiDJ.swt;
 
 import com.cubaix.kaiDJ.db.SongDescr;
 

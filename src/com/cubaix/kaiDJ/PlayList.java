@@ -28,6 +28,7 @@ import org.eclipse.swt.widgets.Composite;
 import com.cubaix.kaiDJ.db.SongDescr;
 import com.cubaix.kaiDJ.db.SongGroup;
 import com.cubaix.kaiDJ.swt.KaiScrollBar;
+import com.cubaix.kaiDJ.swt.PlayListListener;
 import com.cubaix.kaiDJ.swt.TimedCanvas;
 import com.cubaix.kaiDJ.xml.PlayListLoader;
 
@@ -266,7 +267,7 @@ public class PlayList extends Composite {
 				GC aPlGC = new GC(listTC);
 				paintDbl(aPlGC);
 				aPlGC.dispose();
-				listTC.needRedraw();
+//				listTC.needRedraw();
 			}
 		});
 		listTC.addKeyListener(new KeyListener() {
