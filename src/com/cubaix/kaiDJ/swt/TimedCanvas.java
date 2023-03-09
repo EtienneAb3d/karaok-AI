@@ -22,7 +22,7 @@ public class TimedCanvas extends Canvas {
 	protected int refreshRate = 100;
 	
 	public TimedCanvas(KaiDJ aParentKDJ, Composite parent, int style) {
-		super(parent, style | SWT.NO_BACKGROUND | SWT.TRANSPARENT);
+		super(parent, style);
 		parentKDJ = aParentKDJ;
 		this.addMouseTrackListener(new MouseTrackListener() {
 			public void mouseEnter(MouseEvent arg0) {

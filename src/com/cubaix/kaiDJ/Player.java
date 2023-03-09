@@ -103,7 +103,7 @@ public class Player extends TimedCanvas implements BasicPlayerListener, KJDigita
 	 * @param style
 	 */
 	public Player(KaiDJ aParentJDJ, Composite parent, int style, int aDest) {
-		super(aParentJDJ, parent, style | SWT.NO_BACKGROUND);
+		super(aParentJDJ, parent, style);
 		//EM 12/11/2008 : refresh more often for the vumeter
 		refreshRate = 50;
 		
@@ -113,7 +113,7 @@ public class Player extends TimedCanvas implements BasicPlayerListener, KJDigita
 				playerBounds = getClientArea();
 				// playerGC = aPE.gc;
 				paintDbl(aPE.gc);
-//				needRedraw();
+				needRedraw();
 			}
 		});
 		// playerGC = new GC(this);
@@ -174,7 +174,7 @@ public class Player extends TimedCanvas implements BasicPlayerListener, KJDigita
 				//EM 29/04/2009 : provide with parentJDJ
 				player = new BasicPlayer(parentKDJ);
 				//EM 01/11/2008 : try to get the same buffer size on each 
-				player.setLineBufferSize(65535);
+				player.setLineBufferSize(-1);//65535);
 				
 				setDestCard(destCard);
 				// BasicPlayer is a BasicController.

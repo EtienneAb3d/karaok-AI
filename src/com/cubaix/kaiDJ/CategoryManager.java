@@ -26,7 +26,7 @@ public class CategoryManager extends Composite {
 //	Text categoryT;
 	String currentCategory = "";
 	public CategoryManager(KaiDJ aParentJDJ,Composite parent, int style) {
-		super(parent, style | SWT.NO_BACKGROUND);
+		super(parent, style);
 		parentJDJ = aParentJDJ;
 		
         String os = System.getProperty("os.name");

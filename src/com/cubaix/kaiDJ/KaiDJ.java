@@ -45,8 +45,8 @@ import com.cubaix.kaiDJ.xml.ConfigLoader;
 
 // Main class, for all in JDJ
 public class KaiDJ {
-	static final public String _VERSION = "0.5.0";
-	public static final boolean _DEBUG_PAINT = true;
+	static final public String _VERSION = "0.5.1";
+	public static final boolean _DEBUG_PAINT = false;
 	
 	public static String kaiDir = System.getProperty("user.home")+File.separatorChar+"karaok-AI";
 	static {
@@ -54,7 +54,7 @@ public class KaiDJ {
 			new File(kaiDir).mkdirs();
 		}
 	}
-	String configPath = kaiDir+"/config.xml";
+	String configPath = kaiDir+File.separatorChar+"config.xml";
 	String currentPLPath = System.getProperty("user.home");
 
 	public Display display = null;
@@ -237,7 +237,7 @@ public class KaiDJ {
 	void createInterface() {
 		// final jDJ aThis = this;
 		display = new Display();
-		shell = new Shell(display, SWT.SHELL_TRIM | SWT.NO_BACKGROUND);
+		shell = new Shell(display, SWT.SHELL_TRIM);
 		shell.open();
 		mainGC = new GC(shell);
 		shell.addPaintListener(new PaintListener() {
@@ -319,7 +319,7 @@ public class KaiDJ {
 		aCentralC.setLayout(gridLayout);
 
 		// Search panel
-		searchPanel = new Composite(aCentralC, SWT.NO_BACKGROUND);
+		searchPanel = new Composite(aCentralC, SWT.NONE);
 		aGD = new GridData(GridData.FILL_BOTH);
 		searchPanel.setLayoutData(aGD);
 		GridLayout aGL = new GridLayout();
@@ -972,7 +972,7 @@ public class KaiDJ {
 					System.out.println("Db cleaned in : " + Player.formatTimeMs(new Date().getTime() - aTime));
 					// Try to load last pl
 					aTime = new Date().getTime();
-					managerPlay.load(kaiDir+"/last.jdj", true);
+					managerPlay.load(kaiDir+File.separatorChar+"last.jdj", true);
 					managerPlay.pl.listTC.needRedraw();
 					System.out.println("Last PL loaded in : " + Player.formatTimeMs(new Date().getTime() - aTime));
 					// Start analyzer

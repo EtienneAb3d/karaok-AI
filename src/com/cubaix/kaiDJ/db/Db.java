@@ -13,7 +13,7 @@ import com.cubaix.kaiDJ.KaiDJ;
 
 public class Db {
 	KaiDJ parentJDJ;
-	static public String mp3DbPath = KaiDJ.kaiDir+"/MP3_v3.hdb";
+	static public String mp3DbPath = KaiDJ.kaiDir+File.separatorChar+"MP3_v3.hdb";
 	String embeddedUrl = "jdbc:hsqldb:file";
 	String databaseURL = embeddedUrl + ":" + mp3DbPath;
 	String user = "sa";

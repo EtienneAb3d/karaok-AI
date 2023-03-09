@@ -82,7 +82,7 @@ public class PlayList extends Composite {
 	 * @param aPosH
 	 */
 	PlayList(KaiDJ aParentKDJ, Composite parent, int style) {
-		super(parent, style | SWT.NO_BACKGROUND | SWT.TRANSPARENT);
+		super(parent, style);
 		parentKDJ = aParentKDJ;
 		
 		ddddNF = NumberFormat.getInstance();
@@ -267,7 +267,7 @@ public class PlayList extends Composite {
 				GC aPlGC = new GC(listTC);
 				paintDbl(aPlGC);
 				aPlGC.dispose();
-//				listTC.needRedraw();
+				listTC.needRedraw();
 			}
 		});
 		listTC.addKeyListener(new KeyListener() {

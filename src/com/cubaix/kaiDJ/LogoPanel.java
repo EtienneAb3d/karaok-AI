@@ -3,6 +3,7 @@ package com.cubaix.kaiDJ;
 import java.io.InputStream;
 import java.util.StringTokenizer;
 
+import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.graphics.GC;
@@ -33,7 +34,7 @@ public class LogoPanel extends TimedCanvas {
 				GC aPlGC = new GC(aThis);
 				paintDbl(aPlGC);
 				aPlGC.dispose();
-//				needRedraw();
+				needRedraw();
 			}
 		});
 		
@@ -61,6 +62,7 @@ public class LogoPanel extends TimedCanvas {
 		if(KaiDJ._DEBUG_PAINT) {
 			System.out.println("LOGOPANEL.paintTimed()");
 		}
+//		if(true) return;
 		if (panelBck == null) {
 			loadImg();
 		}
