@@ -1,7 +1,11 @@
 # karaok-AI
-Karaoke Player / Editor with automatic clip creation from any song file (mp3, ogg, wav, etc) using lyrics extraction from vocals (Speech-to-Text).
+Karaoke Player / Editor with automatic clip creation from any song file using vocals and lyrics extraction (Speech-to-Text).
 
 **karaok-AI is Coming soon...**
+
+karaok-AI is using WhisperHallu and WhisperTimeSync to extract vocals and lyrics:<br/>
+https://github.com/EtienneAb3d/WhisperHallu <br/>
+https://github.com/EtienneAb3d/WhisperTimeSync 
 
 # Included: kaiDJ
 
