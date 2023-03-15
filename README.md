@@ -17,3 +17,7 @@ https://github.com/EtienneAb3d/WhisperTimeSync
 - Open / save m3u and m3u8 playlists keeping groups definitions.
 
 <img src="https://github.com/EtienneAb3d/karaok-AI/blob/main/Screenshots/kayDJ.png?raw=true"/>
+
+<hr>
+If you are interested in a commercial/industrial linguistic project, contact us:<br/>
+https://cubaix.com
