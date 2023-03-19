@@ -101,47 +101,15 @@ public class BasicPlayer implements BasicController, Runnable, KJDigitalSignalPr
     /**
      * Constructs a Basic Player.
      */
-    public BasicPlayer(KaiDJ aParentJDJ)
+    public BasicPlayer(KaiDJ aParentJDJ,boolean aUseDSP)
     {
         m_dataSource = null;
         m_listeners = new ArrayList();
         reset();
-        //EM 11/11/2008
-        //EM 29/04/2009 : provide with parentJDJ
-        dspAc = new KJDigitalSignalProcessingAudioDataConsumer(aParentJDJ);
-        dspAc.add(this);
-//        addBasicPlayerListener(new BasicPlayerListener(){
-//        	boolean dspStarted = false;
-//			public void opened(Object stream, Map properties) {
-//			}
-//			public void progress(int bytesread, long microseconds, byte[] pcmdata, Map properties) {
-//			}
-//			public void setController(BasicController controller) {
-//			}
-//			public void stateUpdated(BasicPlayerEvent event) {
-//		        int state = event.getCode();
-//		        if (state == BasicPlayerEvent.PLAYING){
-//		        	System.out.println("STARTING DSP");
-//		        	if(dspStarted){
-//			        	System.out.println("..NEED TO STOP DSP FIRST");
-//			        	dspAc.stop();
-//		        	}
-//		        	dspStarted = true;
-//		            int channels = m_line.getFormat().getChannels();
-//		            if (channels == 1) dspAc.setChannelMode(KJDigitalSignalProcessingAudioDataConsumer.CHANNEL_MODE_MONO);
-//		            else dspAc.setChannelMode(KJDigitalSignalProcessingAudioDataConsumer.CHANNEL_MODE_STEREO);
-//		            int bits = m_line.getFormat().getSampleSizeInBits();
-//		            if (bits == 8) dspAc.setSampleType(KJDigitalSignalProcessingAudioDataConsumer.SAMPLE_TYPE_EIGHT_BIT);
-//		            else dspAc.setSampleType(KJDigitalSignalProcessingAudioDataConsumer.SAMPLE_TYPE_SIXTEEN_BIT);
-//		        	dspAc.start(m_line);
-//		        }
-//		        else if (state == BasicPlayerEvent.STOPPED){
-//		        	System.out.println("STOPPING DSP");
-//		        	dspStarted = false;
-//		        	dspAc.stop();
-//		        }
-//			}
-//        });
+        if(aUseDSP) {
+        	dspAc = new KJDigitalSignalProcessingAudioDataConsumer(aParentJDJ);
+        	dspAc.add(this);
+        }
     }
     
     protected void reset()
@@ -160,8 +128,9 @@ public class BasicPlayer implements BasicController, Runnable, KJDigitalSignalPr
         encodedLength = -1;
         if (m_line != null)
         {
-        	//EM 11/11/2008
-        	dspAc.stop();
+        	if(dspAc != null) {
+        		dspAc.stop();
+        	}
         	
             m_line.stop();
             m_line.close();
@@ -483,9 +452,6 @@ public class BasicPlayer implements BasicController, Runnable, KJDigitalSignalPr
             log.info("Line : " + m_line.toString());
             log.debug("Line Info : " + m_line.getLineInfo().toString());
             log.debug("Line AudioFormat: " + m_line.getFormat().toString());
-            
-            //EM 11/11/2008
-//            dspAc.start( m_line );
         }
     }
 
@@ -535,8 +501,9 @@ public class BasicPlayer implements BasicController, Runnable, KJDigitalSignalPr
         {
             if (m_line != null)
             {
-            	//EM 11/11/2008
-            	dspAc.stop();
+            	if(dspAc != null) {
+            		dspAc.stop();
+            	}
 
             	//EM 03/06/2008 : stop first, flush after, to avoid a blocking situation .. ?
             	//..Less clean, but no more blocking on some sound cards
@@ -564,8 +531,9 @@ public class BasicPlayer implements BasicController, Runnable, KJDigitalSignalPr
         {
             if (m_status == PLAYING)
             {
-            	//EM 11/11/2008
-            	dspAc.stop();
+            	if(dspAc != null) {
+            		dspAc.stop();
+            	}
 
             	//EM 03/06/2008 : stop first, flush after, to avoid a blocking situation .. ?
                 m_line.stop();
@@ -588,8 +556,9 @@ public class BasicPlayer implements BasicController, Runnable, KJDigitalSignalPr
         {
             if (m_status == PAUSED)
             {
-                //EM 11/11/2008
-                dspAc.start(m_line);
+            	if(dspAc != null) {
+            		dspAc.start(m_line);
+            	}
 
                 m_line.start();
                 m_status = PLAYING;
@@ -650,8 +619,9 @@ public class BasicPlayer implements BasicController, Runnable, KJDigitalSignalPr
             m_thread.start();
             if (m_line != null)
             {
-                //EM 11/11/2008
-                dspAc.start(m_line);
+            	if(dspAc != null) {
+            		dspAc.start(m_line);
+            	}
 
                 m_line.start();
                 m_status = PLAYING;
@@ -692,9 +662,9 @@ public class BasicPlayer implements BasicController, Runnable, KJDigitalSignalPr
                             	log.debug("Underrun : "+m_line.available()+"/"+m_line.getBufferSize());
                             }
 
-                            //EM 11/11/2008
-                            //EM 29/04/2009 : try to write on the DSP before the sound card
-                            dspAc.writeAudioData( abData ,0, nBytesRead);
+                            if(dspAc != null) {
+                            	dspAc.writeAudioData( abData ,0, nBytesRead);
+                            }
 
                             /*int nBytesWritten = */m_line.write(abData, 0, nBytesRead);
                             
@@ -758,8 +728,9 @@ public class BasicPlayer implements BasicController, Runnable, KJDigitalSignalPr
             // Free audio resources.
             if (m_line != null)
             {
-            	//EM 11/11/2008
-            	dspAc.stop();
+            	if(dspAc != null) {
+            		dspAc.stop();
+            	}
 
             	m_line.drain();
                 m_line.stop();

@@ -5,13 +5,11 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Vector;
+
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Line;
 import javax.sound.sampled.Mixer;
 import javax.sound.sampled.SourceDataLine;
-import javax.swing.UIDefaults;
-import javax.swing.UIManager;
-import javax.swing.plaf.ColorUIResource;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.MouseEvent;
@@ -36,6 +34,8 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Shell;
 
+import com.cubaix.kai.KaiClient;
+import com.cubaix.kai.KaiEditor;
 import com.cubaix.kaiDJ.db.Db;
 import com.cubaix.kaiDJ.db.Id3Analyzer;
 import com.cubaix.kaiDJ.db.SongDescr;
@@ -45,7 +45,7 @@ import com.cubaix.kaiDJ.xml.ConfigLoader;
 
 // Main class, for all in JDJ
 public class KaiDJ {
-	static final public String _VERSION = "0.5.1";
+	static final public String _VERSION = "0.6.0";
 	public static final boolean _DEBUG_PAINT = false;
 	
 	public static String kaiDir = System.getProperty("user.home")+File.separatorChar+"karaok-AI";
@@ -54,58 +54,50 @@ public class KaiDJ {
 			new File(kaiDir).mkdirs();
 		}
 	}
-	String configPath = kaiDir+File.separatorChar+"config.xml";
+	public String configPath = kaiDir+File.separatorChar+"config.xml";
 	String currentPLPath = System.getProperty("user.home");
 
 	public Display display = null;
-
 	public Shell shell = null;
-
 	public GC mainGC = null;
+	
+	public String userEMail = "";
+	public String userCode = "";
 
 	// Colors
 	public Color whiteC;
-
 	public Color blackC;
-
 	public Color grayC;
-
 	public Color blueC;
-
 	public Color redC;
-
-	//EM 18/05/2008
 	public Color yellowC;
-
 	public Color mainBckC;
-
 	public Color logoDarkC;
 	public Color logoLightC;
-	
 	public Color playerC;
-
 	public Color playerBarC;
-
 	public Color selectedC;
 
 	public Font initialFont;
-
-	public Font butFont;
-
 	public Font largeFont;
+	public Font kaiFont;
+	public Font butFont;
+	public Font viewerFont;
+	
+	public Image kaiIcon = null;
+	public Image kaiButIcon = null;
 
 	// Log
 	public LogoPanel logoPanel = null;
 
 	//EM 24/08/2008 : store mixers indexes for valid stored mixers
-	ArrayList mixers = new ArrayList();
-	ArrayList mixersIndex = new ArrayList();
-
+	public ArrayList mixers = new ArrayList();
+	public ArrayList mixersIndex = new ArrayList();
 
 	// Players
-	public Player playerPre = null;
-	public Player player1 = null;
-	public Player player2 = null;
+	public DJPlayer playerPre = null;
+	public DJPlayer player1 = null;
+	public DJPlayer player2 = null;
 
 	//EM 06/07/2008 : stop-after button
 	KaiButton stopAfterB;
@@ -117,24 +109,17 @@ public class KaiDJ {
 
 
 	public int soundCard1 = -1;
-
 	public int soundCard2 = -1;
-
 	public int soundCardPre = -1;
-	
-	//EM 03/06/2008
 	public int soundCardJava = -1;
 
 	Combo soundCard1C;
-
 	Combo soundCard2C;
-
 	Combo soundCardPreC;
 
 	KaiButton autoMixB;
 
 	boolean autoMix = true;
-
 	boolean timeToNextDone = false;
 
 	// Data
@@ -144,15 +129,14 @@ public class KaiDJ {
 
 	// Interface groups
 	public SearchManager managerSearch;
-
 	public CategoryManager managerCategories = null;
-
 	PlayManager managerPlay;
-
 	Composite searchPanel;
 
 	//EM 02/11/2008
 	String msgUpdate = null;
+	
+	KaiEditor kaiEditor = null;
 	
 	KaiDJ() {
 	}
@@ -179,13 +163,18 @@ public class KaiDJ {
 	void scanDir(final String aPath) {
 		Thread aTh = new Thread(new Runnable() {
 			public void run() {
-				analyzer.stopScan = true;
-				db.scanDir(aPath);
-				//EM 13/09/2008
-				db.cleanDoubles();
-				initDbList();
-				analyzer.scan();
-				setMsg("");
+				try {
+					analyzer.stopScan = true;
+					db.scanDir(aPath);
+					//EM 13/09/2008
+					db.cleanDoubles();
+					initDbList();
+					analyzer.scan();
+					setMsg("");
+					managerSearch.pl.listTC.needRedraw();
+				} catch (Exception e) {
+					e.printStackTrace(System.err);
+				}
 			}
 		});
 		aTh.setPriority(Thread.MIN_PRIORITY);
@@ -254,9 +243,9 @@ public class KaiDJ {
 		shell.setLayout(gridLayout);
 		setMsg("");
 		InputStream aIS = getClass().getResourceAsStream("img/Icon.png");
-		Image aIcon = new Image(display, aIS);
+		kaiIcon = new Image(display, aIS);
 		aIS = getClass().getResourceAsStream("img/playerBck.png");
-		shell.setImage(aIcon);
+		shell.setImage(kaiIcon);
 		// Colors
 		whiteC = display.getSystemColor(SWT.COLOR_WHITE);
 		blackC = display.getSystemColor(SWT.COLOR_BLACK);
@@ -274,16 +263,30 @@ public class KaiDJ {
 
 		// Fonts
 		initialFont = mainGC.getFont();
+		
 		FontData[] fontData = initialFont.getFontData();
 		for (int i = 0; i < fontData.length; i++) {
 			fontData[i].setHeight(22);
 		}
 		largeFont = new Font(display, fontData);
+
+		fontData = initialFont.getFontData();
+		for (int i = 0; i < fontData.length; i++) {
+			fontData[i].setHeight(12);
+		}
+		kaiFont = new Font(display, fontData);
+
 		fontData = initialFont.getFontData();
 		for (int i = 0; i < fontData.length; i++) {
 			fontData[i].setHeight(14);
 		}
 		butFont = new Font(display, fontData);
+
+		fontData = initialFont.getFontData();
+		for (int i = 0; i < fontData.length; i++) {
+			fontData[i].setHeight(36);
+		}
+		viewerFont = new Font(display, fontData);
 
 		// Panels
 		// Composite aC;
@@ -337,9 +340,21 @@ public class KaiDJ {
 
 		// Add listeners
 		createListeners();
+		
+		aIS = getClass().getResourceAsStream("img2/kaiIcon.png");
+		kaiButIcon = new Image(display, aIS);
+
 		shell.pack();
-		// Size
-		shell.setSize(800, 600);
+		Rectangle aR = display.getBounds();
+		if(aR.width > 1920) {
+			aR.width = 1920;
+		}
+		if(aR.height > 1080) {
+			aR.height = 1080;
+		}
+		aR.width -= 20;
+		aR.height /=2;
+		shell.setBounds(aR);
 	}
 
 	/**
@@ -369,9 +384,9 @@ public class KaiDJ {
 
 		// Pre
 		aGD = new GridData();
-		aGD.widthHint = Player._WIDTHINT;
-		aGD.heightHint = Player._HEIGHTINT;
-		playerPre = new Player(this, aPlayersC, SWT.NULL, 2);
+		aGD.widthHint = DJPlayer._WIDTHINT;
+		aGD.heightHint = DJPlayer._HEIGHTINT;
+		playerPre = new DJPlayer(this, aPlayersC, SWT.NULL, 2,false);
 		playerPre.setLayoutData(aGD);
 		// Logo
 		logoPanel = new LogoPanel(this, aPlayersC, SWT.BORDER);
@@ -381,7 +396,7 @@ public class KaiDJ {
 		logoPanel.setLayoutData(aGDLogo);
 
 		// P1
-		player1 = new Player(this, aPlayersC, SWT.NULL, 0);
+		player1 = new DJPlayer(this, aPlayersC, SWT.NULL, 0,true);
 		player1.setLayoutData(aGD);
 		
 		//EM 06/07/2008 : stop-after button
@@ -470,7 +485,7 @@ public class KaiDJ {
 
 
 		// P2
-		player2 = new Player(this, aPlayersC, SWT.NULL, 0);
+		player2 = new DJPlayer(this, aPlayersC, SWT.NULL, 0,true);
 		player2.setLayoutData(aGD);
 
 		// Get all sound cards
@@ -480,21 +495,18 @@ public class KaiDJ {
 				Line.Info lineInfo = new Line.Info(SourceDataLine.class);
 				Mixer mixer = AudioSystem.getMixer(mInfos[i]);
 				if (mixer.isLineSupported(lineInfo)) {
-					//EM 24/08/2008 : trace
 					System.out.println("MIXER added : " + mInfos[i].getName());
 					mixers.add(mInfos[i].getName());
-					//EM 24/08/2008
 					mixersIndex.add(new Integer(i));
 				}
 				else{
-					//EM 24/08/2008 : trace
 					System.out.println("MIXER not added : " + mInfos[i].getName());
 				}
 			}
 		}
 		// Selectors
 		GridData aGDSel = new GridData(GridData.CENTER);
-		aGDSel.widthHint = Player._WIDTHINT;
+		aGDSel.widthHint = DJPlayer._WIDTHINT;
 		final KaiDJ aThis = this;
 
 		soundCardPreC = new Combo(aPlayersC, SWT.NULL);
@@ -504,7 +516,9 @@ public class KaiDJ {
 			//EM 03/06/2008 : search for Java sound card
 			String aSCName = (String) mixers.get(c);
 			soundCardPreC.add(aSCName);
-			if(aSCName.indexOf("Java") >= 0){
+			if(aSCName.toLowerCase().indexOf("java") >= 0
+					|| aSCName.toLowerCase().indexOf("default") >= 0
+					|| aSCName.toLowerCase().indexOf("primary") >= 0){
 				soundCardJava = ((Integer)mixersIndex.get(c)).intValue();
 			}
 		}
@@ -521,12 +535,8 @@ public class KaiDJ {
 		soundCardPreC.setLayoutData(aGDSel);
 
 		soundCard1C = new Combo(aPlayersC, SWT.NULL);
-		String os = System.getProperty("os.name");
-		if (!os.toLowerCase().startsWith("mac")) {
-			// Mac seems to not support properly background colors here
-			soundCard1C.setBackground(this.mainBckC);
-			soundCard1C.setForeground(this.playerBarC);
-		}
+		soundCard1C.setBackground(this.mainBckC);
+		soundCard1C.setForeground(this.playerBarC);
 		for (int c = 0; c < mixers.size(); c++) {
 			soundCard1C.add((String) mixers.get(c));
 		}
@@ -543,11 +553,8 @@ public class KaiDJ {
 		soundCard1C.setLayoutData(aGDSel);
 
 		soundCard2C = new Combo(aPlayersC, SWT.NULL);
-		if (!os.toLowerCase().startsWith("mac")) {
-			// Mac seems to not support properly background colors here
-			soundCard2C.setBackground(this.mainBckC);
-			soundCard2C.setForeground(this.playerBarC);
-		}
+		soundCard2C.setBackground(this.mainBckC);
+		soundCard2C.setForeground(this.playerBarC);
 		for (int c = 0; c < mixers.size(); c++) {
 			soundCard2C.add((String) mixers.get(c));
 		}
@@ -568,6 +575,7 @@ public class KaiDJ {
 	 * @param aParentC
 	 */
 	void createButtons(Composite aParentC) {
+		//https://icons.getbootstrap.com/
 		GridData aGD;
 		GridLayout gridLayout;
 		Composite aBlank;
@@ -663,6 +671,57 @@ public class KaiDJ {
 		aBlank.setBackground(this.mainBckC);
 		aGD = new GridData(GridData.FILL_BOTH);
 		aBlank.setLayoutData(aGD);
+		// karaok-AI
+		KaiButton aKai = new KaiButton(this, aButtonsC, SWT.NULL);
+		aKai.setBackground(this.mainBckC);
+		aKai.setToolTipText("Open karaok-AI");
+		aKai.setImagePath("img2/kaiBut.png");
+		aGD = new GridData(GridData.FILL_HORIZONTAL);
+		aGD.heightHint = KaiButton._HEIGHT;
+		aGD.widthHint = KaiButton._WIDTH;
+		aKai.setLayoutData(aGD);
+		final KaiDJ aThis = this;
+		aKai.addSelectionListener(new SelectionListener() {
+			public void widgetDefaultSelected(SelectionEvent arg0) {
+			}
+
+			public void widgetSelected(SelectionEvent arg0) {
+				SongDescr aSong = managerSearch.pl.getSelected();
+				aSong = new SongDescr(aSong);//Enforce update
+				if(aSong == null) {
+					return;
+				}
+				if(kaiEditor == null || kaiEditor.shell.isDisposed()) {
+					kaiEditor = new KaiEditor(aThis);
+				}
+				kaiEditor.load(aSong);
+			}
+		});
+		KaiButton aSearchKai = new KaiButton(this, aButtonsC, SWT.NULL);
+		aSearchKai.setBackground(this.mainBckC);
+		aSearchKai.setToolTipText("Search songs with karaok-AI vocals and lyrics extractions");
+		aSearchKai.setImagePath("img2/searchKaiBut.png");
+		aGD = new GridData(GridData.FILL_HORIZONTAL);
+		aGD.heightHint = KaiButton._HEIGHT;
+		aGD.widthHint = KaiButton._WIDTH;
+		aSearchKai.setLayoutData(aGD);
+		aSearchKai.addSelectionListener(new SelectionListener() {
+			public void widgetDefaultSelected(SelectionEvent arg0) {
+			}
+
+			public void widgetSelected(SelectionEvent arg0) {
+				display.asyncExec(new Runnable() {
+					public void run() {
+						managerSearch.searchText.setText("kAI");
+					}
+				});
+			}
+		});
+		// Blank panel
+		aBlank = new Composite(aButtonsC, SWT.NULL);
+		aBlank.setBackground(this.mainBckC);
+		aGD = new GridData(GridData.FILL_BOTH);
+		aBlank.setLayoutData(aGD);
 		// Categories
 		KaiButton aAddRemove = new KaiButton(this, aButtonsC, SWT.NULL);
 		aAddRemove.setBackground(this.mainBckC);
@@ -672,7 +731,6 @@ public class KaiDJ {
 		aGD.heightHint = KaiButton._HEIGHT;
 		aGD.widthHint = KaiButton._WIDTH;
 		aAddRemove.setLayoutData(aGD);
-		final KaiDJ aThis = this;
 		aAddRemove.addSelectionListener(new SelectionListener() {
 			public void widgetDefaultSelected(SelectionEvent arg0) {
 			}
@@ -837,7 +895,7 @@ public class KaiDJ {
 			}
 
 			public void mouseDown(MouseEvent aEvt) {
-				if (player1.click(aEvt.x, aEvt.y)) {
+				if (player1.click(aEvt.x, aEvt.y) > 0) {
 					// Done
 					return;
 				}
@@ -868,7 +926,7 @@ public class KaiDJ {
 			}
 
 			public void mouseDown(MouseEvent aEvt) {
-				if (player2.click(aEvt.x, aEvt.y)) {
+				if (player2.click(aEvt.x, aEvt.y) > 0) {
 					// Done
 					return;
 				}
@@ -899,7 +957,7 @@ public class KaiDJ {
 			}
 
 			public void mouseDown(MouseEvent aEvt) {
-				if (playerPre.click(aEvt.x, aEvt.y)) {
+				if (playerPre.click(aEvt.x, aEvt.y) > 0) {
 					// Done
 					return;
 				}
@@ -919,7 +977,7 @@ public class KaiDJ {
 	}
 	
 	//EM 24/08/2008 
-	int mixerIndexToComboIndex(int aIndex){
+	public int mixerIndexToComboIndex(int aIndex){
 		for(int i = 0;i < mixersIndex.size();i++){
 			if(((Integer)mixersIndex.get(i)).intValue() == aIndex){
 				return i;
@@ -965,16 +1023,16 @@ public class KaiDJ {
 					long aTime = new Date().getTime();
 					// init db
 					initDbList();
-					System.out.println("DB loaded in : " + Player.formatTimeMs(new Date().getTime() - aTime));
+					System.out.println("DB loaded in : " + DJPlayer.formatTimeMs(new Date().getTime() - aTime));
 					//EM 13/09/2008
 					aTime = new Date().getTime();
 					db.cleanDoubles();
-					System.out.println("Db cleaned in : " + Player.formatTimeMs(new Date().getTime() - aTime));
+					System.out.println("Db cleaned in : " + DJPlayer.formatTimeMs(new Date().getTime() - aTime));
 					// Try to load last pl
 					aTime = new Date().getTime();
 					managerPlay.load(kaiDir+File.separatorChar+"last.jdj", true);
 					managerPlay.pl.listTC.needRedraw();
-					System.out.println("Last PL loaded in : " + Player.formatTimeMs(new Date().getTime() - aTime));
+					System.out.println("Last PL loaded in : " + DJPlayer.formatTimeMs(new Date().getTime() - aTime));
 					// Start analyzer
 					analyzer = new Id3Analyzer(aThis, db);
 					display.syncExec(new Runnable() {
@@ -982,6 +1040,15 @@ public class KaiDJ {
 							shell.setCursor(null);
 						}
 					});
+					//Start with something (first launch?)
+					if(managerSearch.pl.getPl().size() <= 0 && new File("demo").exists()) {
+						try {
+							scanDir(new File("demo").getCanonicalPath());
+						} catch (Exception e) {
+							e.printStackTrace(System.err);
+						}
+					}
+
 				}
 			},
 			//EM 02/11/2008
@@ -1065,7 +1132,7 @@ public class KaiDJ {
 	 * @param aEndingPlayer
 	 *            the player that ends its play and ask for a mix. Can be null if the call is made outside of a player
 	 */
-	public void timeToNext(Player aEndingPlayer) {
+	public void timeToNext(DJPlayer aEndingPlayer) {
 		if (aEndingPlayer == playerPre) {
 			// Don't mix on pre-listener
 			return;

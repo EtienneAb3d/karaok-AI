@@ -2,7 +2,6 @@
 <classpath>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry kind="lib" path="lib/common/CodeAffinSWT.jar"/>
 	<classpathentry kind="lib" path="lib/common/commons-logging-api.jar"/>
 	<classpathentry kind="lib" path="lib/common/hsqldb.jar"/>
 	<classpathentry kind="lib" path="lib/common/jakarta-regexp-1.5.jar"/>
@@ -13,5 +12,9 @@
 	<classpathentry kind="lib" path="lib/common/myid3.jar"/>
 	<classpathentry kind="lib" path="lib/common/tritonus_share.jar"/>
 	<classpathentry kind="lib" path="lib/swt-linux.jar"/>
+	<classpathentry kind="lib" path="lib/common/xmlrpc-client-3.1.3.jar"/>
+	<classpathentry kind="lib" path="lib/common/xmlrpc-common-3.1.3.jar"/>
+	<classpathentry kind="lib" path="lib/common/ws-commons-util-1.0.2.jar"/>
+	<classpathentry kind="lib" path="lib/common/WhisperTimeSync.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

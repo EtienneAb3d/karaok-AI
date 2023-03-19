@@ -1,18 +1,17 @@
 package com.cubaix.kaiDJ;
 
+import java.io.File;
 import java.text.NumberFormat;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.Vector;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.ControlListener;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseListener;
 import org.eclipse.swt.events.MouseMoveListener;
-import org.eclipse.swt.events.MouseWheelListener;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.events.SelectionEvent;
@@ -66,7 +65,7 @@ public class PlayList extends Composite {
 
 	final int lineHeight = 15;
 
-	int[] colWidths = new int[] { 40, 50, 100, 150, 400 };
+	int[] colWidths = new int[] { 40, 50, 100, 150, 800 };
 
 	Vector playListListeners = new Vector();
 	
@@ -1036,6 +1035,11 @@ public class PlayList extends Composite {
 								aGC.setClipping(aD + aPosX + (aTab * 30), aPosY, colWidths[2] - 5, lineHeight);
 								aGC.drawText(aDescr.getAuthor(), aD + aPosX + (aTab * 30), aPosY);
 								aD += colWidths[2];
+								// Kai
+								if(new File(aDescr.path+".kai").exists()) {
+									aGC.setClipping(aD + aPosX + (aTab * 30)-15, aPosY, 16, lineHeight);
+									aGC.drawImage(parentKDJ.kaiButIcon, aD + aPosX + (aTab * 30)-15, aPosY);
+								}
 								// Title
 								aGC.setClipping(aD + aPosX + (aTab * 30), aPosY, colWidths[3] - 5, lineHeight);
 								aGC.drawText(aDescr.getTitle(), aD + aPosX + (aTab * 30), aPosY);

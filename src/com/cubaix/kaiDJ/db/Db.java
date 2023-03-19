@@ -331,7 +331,16 @@ public class Db {
 			int aCount = 0;
 			while (rs.next() && !breakSearch) {
 				SongDescr aDescr = newFromRS(rs);
-				if (aDescr.path.toLowerCase().indexOf(aSearchL) >= 0 || aDescr.album.toLowerCase().indexOf(aSearchL) >= 0 || aDescr.author.toLowerCase().indexOf(aSearchL) >= 0 || aDescr.title.toLowerCase().indexOf(aSearchL) >= 0) {
+				if("kAI".equals(aSearch)){
+					if(aDescr.kaiSrt != null) {
+						aRes.add(aDescr);
+						aCount++;
+						if ((aCount % 100) == 0) {
+							parentJDJ.managerSearch.pl.listTC.needRedraw();
+						}
+					}
+				}
+				else if(aDescr.path.toLowerCase().indexOf(aSearchL) >= 0 || aDescr.album.toLowerCase().indexOf(aSearchL) >= 0 || aDescr.author.toLowerCase().indexOf(aSearchL) >= 0 || aDescr.title.toLowerCase().indexOf(aSearchL) >= 0) {
 					aRes.add(aDescr);
 					aCount++;
 					if ((aCount % 100) == 0) {

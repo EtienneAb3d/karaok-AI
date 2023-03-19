@@ -3,6 +3,8 @@ package com.cubaix.kaiDJ.db;
 import java.io.File;
 import java.text.NumberFormat;
 
+import com.cubaix.kai.KaiSrt;
+
 public class SongDescr {
 	static NumberFormat ddNF;
 	static {
@@ -12,24 +14,19 @@ public class SongDescr {
 	}
 
 	public Integer id = null;
-
 	public String path = null;
-
 	public String author = "[UNKNOWN]";
-
 	public String title = "[UNKNOWN]";
-
 	public String album = "[UNKNOWN]";
 
 	public long duration = -1;
-
 	String durationDisplay = "";
-
 	public int hash = -1;
-	
 	int enablePlay = 0;//0 : undefined (not in play list), 1 : play, -1 : don't play
 	
 	Integer plID = new Integer((int)(Math.random() * Integer.MAX_VALUE));
+	
+	public KaiSrt kaiSrt = null;
 
 	/**
 	 * @param aId
@@ -39,6 +36,9 @@ public class SongDescr {
 		id = aId;
 		path = aPath;
 		hash = path.toLowerCase().hashCode();
+		if(new File(path+".kai").exists()) {
+			kaiSrt = new KaiSrt(path);
+		}
 	}
 
 	/**
@@ -55,6 +55,9 @@ public class SongDescr {
 		path = aPath;
 		hash = path.toLowerCase().hashCode();
 		set(aAuthor, aTitle, aAlbum, aDuration);
+		if(new File(path+".kai").exists()) {
+			kaiSrt = new KaiSrt(path);
+		}
 	}
 
 	/**

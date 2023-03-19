@@ -81,7 +81,7 @@ public class Id3Analyzer implements BasicPlayerListener {
 		if (player == null) {
 			// Instantiate BasicPlayer.
 			//EM 29/04/2009 : parentJDJ
-			player = new BasicPlayer(parentJDJ);
+			player = new BasicPlayer(parentJDJ,false);
 			player.addBasicPlayerListener(this);
 		}
 		try{

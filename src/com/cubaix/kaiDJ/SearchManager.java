@@ -6,6 +6,8 @@ import java.util.Vector;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.KeyListener;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseListener;
 import org.eclipse.swt.events.SelectionEvent;
@@ -84,19 +86,27 @@ public class SearchManager extends Composite {
         }
 		aGD = new GridData(GridData.FILL_BOTH);
 		searchText.setLayoutData(aGD);
-		searchText.addKeyListener(new KeyListener() {
-			public void keyPressed(KeyEvent arg0) {
-			}
-
-			public void keyReleased(KeyEvent arg0) {
-				int aCharCode = arg0.character & 0xFF;
-				if (aCharCode > 32 || arg0.keyCode == 8 || (arg0.keyCode >= 32 && arg0.keyCode < 65535)) {
-					mustSearch = true;
-					parentKDJ.db.breakSearch = true;
-					doSearch();
-				}
+		searchText.addModifyListener(new ModifyListener() {
+			@Override
+			public void modifyText(ModifyEvent arg0) {
+				mustSearch = true;
+				parentKDJ.db.breakSearch = true;
+				doSearch();
 			}
 		});
+//		searchText.addKeyListener(new KeyListener() {
+//			public void keyPressed(KeyEvent arg0) {
+//			}
+//
+//			public void keyReleased(KeyEvent arg0) {
+//				int aCharCode = arg0.character & 0xFF;
+//				if (aCharCode > 32 || arg0.keyCode == 8 || (arg0.keyCode >= 32 && arg0.keyCode < 65535)) {
+//					mustSearch = true;
+//					parentKDJ.db.breakSearch = true;
+//					doSearch();
+//				}
+//			}
+//		});
 		
 		//PL
 		pl = new PlayList(parentKDJ, this, SWT.NONE);

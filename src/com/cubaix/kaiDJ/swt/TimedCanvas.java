@@ -80,8 +80,8 @@ public class TimedCanvas extends Canvas {
 									|| (needRedrawSlow && (aCount%10) == 0)) {
 								// Immediatly take request into account
 								needRedraw = false;
-								//EM 12/11/2008
 								needRedrawSlow = false;
+								aCount = 0;
 								
 								if (parentKDJ.display == null || parentKDJ.display.isDisposed()) {
 									// Wait until it is available
@@ -92,10 +92,10 @@ public class TimedCanvas extends Canvas {
 									public void run() {
 										try {
 											paintTimed();
-										} catch (Throwable t) {
-										}// Could be some errors at shut down
-										// time because of
-										// multi-thread
+										} 
+										catch (Throwable t) {
+											t.printStackTrace(System.err);
+										}
 									}
 								});
 							}
