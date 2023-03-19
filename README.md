@@ -1,7 +1,13 @@
 # karaok-AI
 Karaoke Player / Editor with automatic clip creation from any song file using vocals and lyrics extraction (Speech-to-Text).
 
-**karaok-AI is Coming soon...**
+karaok-AI lyrics and timestamps editor:
+
+<img src="https://github.com/EtienneAb3d/karaok-AI/blob/main/Screenshots/kAI.png?raw=true"/>
+
+karaok-AI screener with synchronized lyrics:
+
+<img src="https://github.com/EtienneAb3d/karaok-AI/blob/main/Screenshots/kAI-screener.png?raw=true"/>
 
 karaok-AI is using WhisperHallu and WhisperTimeSync to extract vocals and lyrics:<br/>
 https://github.com/EtienneAb3d/WhisperHallu <br/>
@@ -16,7 +22,7 @@ https://github.com/EtienneAb3d/WhisperTimeSync
 - playlist offering the possibility to manage songs by nested groups. 
 - Open / save m3u and m3u8 playlists keeping groups definitions.
 
-<img src="https://github.com/EtienneAb3d/karaok-AI/blob/main/Screenshots/kayDJ.png?raw=true"/>
+<img src="https://github.com/EtienneAb3d/karaok-AI/blob/main/Screenshots/kaiDJ.png?raw=true"/>
 
 <hr>
 If you are interested in a commercial/industrial linguistic project, contact us:<br/>
