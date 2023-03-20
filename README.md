@@ -26,5 +26,5 @@ https://github.com/EtienneAb3d/WhisperTimeSync
 
 <hr>
 This tool is a demonstration of our know-how.<br/>
-If you are interested in a commercial/industrial linguistic project, contact us:<br/>
+If you are interested in a commercial/industrial AI linguistic project, contact us:<br/>
 https://cubaix.com
