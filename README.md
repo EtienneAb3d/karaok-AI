@@ -25,5 +25,6 @@ https://github.com/EtienneAb3d/WhisperTimeSync
 <img src="https://github.com/EtienneAb3d/karaok-AI/blob/main/Screenshots/kaiDJ.png?raw=true"/>
 
 <hr>
+This tool is a demonstration of our know-how.<br/>
 If you are interested in a commercial/industrial linguistic project, contact us:<br/>
 https://cubaix.com
