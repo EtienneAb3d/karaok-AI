@@ -22,6 +22,8 @@ https://github.com/EtienneAb3d/WhisperTimeSync
 - playlist offering the possibility to manage songs by nested groups. 
 - Open / save m3u and m3u8 playlists keeping groups definitions.
 
+Read the <a href="https://karaok-ai.neurospell.com/doc/" target="_blank">documentation</a> for the basics.
+
 <img src="https://github.com/EtienneAb3d/karaok-AI/blob/main/Screenshots/kaiDJ.png?raw=true"/>
 
 <hr>
