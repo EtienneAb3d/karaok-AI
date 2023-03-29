@@ -45,7 +45,11 @@ import com.cubaix.kaiDJ.xml.ConfigLoader;
 
 // Main class, for all in JDJ
 public class KaiDJ {
-	static final public String _VERSION = "0.6.0";
+	static final public String _VERSION = "0.6.1";
+
+	static public boolean _SIZE_FOR_SCREENSHOTS = false;
+	static final public int _SIZE_FOR_SCREENSHOTS_W = 1024;
+	static final public int _SIZE_FOR_SCREENSHOTS_H = 576;
 	public static final boolean _DEBUG_PAINT = false;
 	
 	public static String kaiDir = System.getProperty("user.home")+File.separatorChar+"karaok-AI";
@@ -354,6 +358,10 @@ public class KaiDJ {
 		}
 		aR.width -= 20;
 		aR.height /=2;
+		if(KaiDJ._SIZE_FOR_SCREENSHOTS) {
+			aR.width = KaiDJ._SIZE_FOR_SCREENSHOTS_W;
+			aR.height = KaiDJ._SIZE_FOR_SCREENSHOTS_H;
+		}
 		shell.setBounds(aR);
 	}
 
@@ -674,7 +682,7 @@ public class KaiDJ {
 		// karaok-AI
 		KaiButton aKai = new KaiButton(this, aButtonsC, SWT.NULL);
 		aKai.setBackground(this.mainBckC);
-		aKai.setToolTipText("Open karaok-AI");
+		aKai.setToolTipText("Open karaok-AI (select a song first)");
 		aKai.setImagePath("img2/kaiBut.png");
 		aGD = new GridData(GridData.FILL_HORIZONTAL);
 		aGD.heightHint = KaiButton._HEIGHT;
@@ -1186,6 +1194,11 @@ public class KaiDJ {
 		System.out.println("Java version : " + System.getProperty("java.version"));
 		System.out.println("JRE location : " + System.getProperty("java.home"));
 		System.out.println("SWT version : " + SWT.getVersion());
+		for(String aA : args) {
+			if("SCR".equalsIgnoreCase(aA)) {
+				KaiDJ._SIZE_FOR_SCREENSHOTS = true;
+			}
+		}
 		new KaiDJ().start();
 	}
 }

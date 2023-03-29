@@ -38,8 +38,7 @@ import kj.dsp.KJDigitalSignalProcessor;
  * This class implements a simple player based on BasicPlayer. BasicPlayer is a threaded class providing most features of a music player. BasicPlayer works with underlying JavaSound SPIs to support multiple audio formats. Basically JavaSound supports WAV, AU, AIFF audio formats. Add MP3 SPI (from JavaZOOM) and Vorbis SPI( from JavaZOOM) in your CLASSPATH to play MP3 and Ogg Vorbis file.
  */
 public class DJPlayer extends TimedCanvas implements BasicPlayerListener, KJDigitalSignalProcessor{
-	
-	//EM 06/07/2008 
+	static public int _BUFFER_SIZE = 16384;
 	static final public int _WIDTHINT = 150;
 	static final public int _HEIGHTINT = 100;
 	
@@ -55,7 +54,7 @@ public class DJPlayer extends TimedCanvas implements BasicPlayerListener, KJDigi
 
 	Rectangle playerBounds = null;
 
-	protected BasicPlayer player;
+	public BasicPlayer player;
 	public BasicController control;
 
 	int destCard = 0;
@@ -146,6 +145,18 @@ public class DJPlayer extends TimedCanvas implements BasicPlayerListener, KJDigi
 		return aClickWhat;
 	}
 
+	public void seek(long aTimeMS) {
+		try {
+			double aPos = aTimeMS / (double) currentDuration;
+			long aSeek = (long) (aPos * currentLengthBytes);
+			player.seek(aSeek);
+			currentPositionMs = aTimeMS;
+			needRedraw();
+		} catch (Exception e) {
+			e.printStackTrace(System.err);
+		}
+	}
+	
 	/**
 	 * @param aDestCard
 	 */
@@ -171,7 +182,7 @@ public class DJPlayer extends TimedCanvas implements BasicPlayerListener, KJDigi
 				//EM 29/04/2009 : provide with parentJDJ
 				player = new BasicPlayer(parentKDJ,useDSP);
 				//EM 01/11/2008 : try to get the same buffer size on each 
-				player.setLineBufferSize(-1);//65535);
+				player.setLineBufferSize(_BUFFER_SIZE);
 				
 				setDestCard(destCard);
 				// BasicPlayer is a BasicController.
@@ -716,7 +727,7 @@ public class DJPlayer extends TimedCanvas implements BasicPlayerListener, KJDigi
 	/**
 	 * @return
 	 */
-	long getDurationTimeMs() {
+	public long getDurationTimeMs() {
 		return currentDuration;
 	}
 

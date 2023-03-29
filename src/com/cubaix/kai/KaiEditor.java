@@ -126,6 +126,10 @@ public class KaiEditor {
 		if(aR.y+aR.height > parentKDJ.display.getBounds().height - 40) {
 			aR.y = parentKDJ.display.getBounds().height-aR.height - 40;
 		}
+		if(KaiDJ._SIZE_FOR_SCREENSHOTS) {
+			aR.width = KaiDJ._SIZE_FOR_SCREENSHOTS_W;
+			aR.height = KaiDJ._SIZE_FOR_SCREENSHOTS_H;
+		}
 		shell.setBounds(aR);
 	}
 
@@ -461,6 +465,21 @@ public class KaiEditor {
 		}
 	}
 	
+	void seek(long aTimeMS) {
+		boolean aIsPlaying = playerVocals.playState == 1;
+		if(aIsPlaying) {
+			togglePlay();
+		}
+		long aBitBef = 500;
+		playerVocals.seek(aTimeMS-aBitBef);
+		playerDrums.seek(aTimeMS-aBitBef);
+		playerBass.seek(aTimeMS-aBitBef);
+		playerOther.seek(aTimeMS-aBitBef);
+		if(aIsPlaying) {
+			togglePlay();
+		}
+	}
+	
 	void togglePlay() {
 		final boolean[] aDone = new boolean[] {false,false,false,false}; 
 		Thread aThVocals = new Thread(new Runnable() {
@@ -608,6 +627,42 @@ public class KaiEditor {
 			
 			@Override
 			public void keyPressed(KeyEvent arg0) {
+			}
+		});
+		editor.addMouseListener(new MouseListener() {
+			@Override
+			public void mouseUp(MouseEvent aE) {
+				int aPos = editor.getCaretPosition();
+				String aTxt = editor.getText();
+				String aLine = null;
+				String[] aLines = aTxt.split("\n");
+				for(String aL : aLines) {
+					if(aPos <= aL.length()) {
+						aLine = aL;
+						break;
+					}
+					aPos -= aL.length()+1;
+				}
+				if(aLine == null || !aLine.matches("[0-9]+:[0-9]+:[0-9]+[.,][0-9]+ --> .*")) {
+					return;
+				}
+				String[] aHMS = aLine.split("[:,. ]");
+				long aTimeMS = Integer.parseInt(aHMS[0])*3600*1000
+						+Integer.parseInt(aHMS[1])*60*1000
+						+Integer.parseInt(aHMS[2])*1000
+						+Integer.parseInt(aHMS[3]);
+				seek(aTimeMS);
+//				int aClickedPos = playerVocals.progessBarR.x
+//						+(int)(playerVocals.progessBarR.width * aTimeMS / (double)playerVocals.getDurationTimeMs());
+//				clickSeek(aClickedPos, playerVocals.progessBarR.y);
+			}
+			
+			@Override
+			public void mouseDown(MouseEvent aE) {
+			}
+			
+			@Override
+			public void mouseDoubleClick(MouseEvent aE) {
 			}
 		});
 	}

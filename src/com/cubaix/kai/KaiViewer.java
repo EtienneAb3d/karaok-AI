@@ -84,6 +84,10 @@ public class KaiViewer {
 		if(aR.y+aR.height > parentKE.parentKDJ.display.getBounds().height - 40) {
 			aR.y = parentKE.parentKDJ.display.getBounds().height-aR.height - 40;
 		}
+		if(KaiDJ._SIZE_FOR_SCREENSHOTS) {
+			aR.width = KaiDJ._SIZE_FOR_SCREENSHOTS_W;
+			aR.height = KaiDJ._SIZE_FOR_SCREENSHOTS_H;
+		}
 		shell.setBounds(aR);
 	}
 
