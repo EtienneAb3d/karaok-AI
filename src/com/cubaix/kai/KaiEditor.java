@@ -2,6 +2,7 @@ package com.cubaix.kai;
 
 import java.io.File;
 import java.util.Arrays;
+import java.util.Vector;
 
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Line;
@@ -26,10 +27,13 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 
+import com.cubAIx.WhisperTimeSync.CubaixAlignerSimple;
+import com.cubAIx.WhisperTimeSync.Pair;
+import com.cubAIx.WhisperTimeSync.TokenizedSent;
+import com.cubAIx.WhisperTimeSync.TokenizerSimple;
 import com.cubaix.kaiDJ.DJPlayer;
 import com.cubaix.kaiDJ.KaiDJ;
 import com.cubaix.kaiDJ.db.SongDescr;
@@ -66,7 +70,8 @@ public class KaiEditor {
 	SongDescr song = null;
 	String songLng = "??";
 	Text editor = null;
-	String editorLastContent = null;
+	Vector<String> editorContentHistory = new Vector<String>();
+	Vector<int[]> editorHVPosHistory = new Vector<int[]>();
 	
 	KaiViewer viewer = null;
 	
@@ -417,67 +422,114 @@ public class KaiEditor {
 	}
 	
 	void clickSeek(int x,int y) {
-		boolean aIsPlaying = playerVocals.playState == 1;
-		if(aIsPlaying) {
-			togglePlay();
-		}
-		final boolean[] aDone = new boolean[] {false,false,false,false}; 
-		Thread aThVocals = new Thread(new Runnable() {
+		Thread aTh = new Thread(new Runnable() {
 			@Override
 			public void run() {
-				playerVocals.click(x, y);
-				aDone[0] = true;
+				boolean aIsPlaying = playerVocals.playState == 1;
+				if(aIsPlaying) {
+					togglePlay();
+				}
+				final boolean[] aDone = new boolean[] {false,false,false,false}; 
+				Thread aThVocals = new Thread(new Runnable() {
+					@Override
+					public void run() {
+						playerVocals.click(x, y);
+						aDone[0] = true;
+					}
+				});
+				Thread aThDrums = new Thread(new Runnable() {
+					@Override
+					public void run() {
+						playerDrums.click(x, y);
+						aDone[1] = true;
+					}
+				});
+				Thread aThBass = new Thread(new Runnable() {
+					@Override
+					public void run() {
+						playerBass.click(x, y);
+						aDone[2] = true;
+					}
+				});
+				Thread aThOther = new Thread(new Runnable() {
+					@Override
+					public void run() {
+						playerOther.click(x, y);
+						aDone[3] = true;
+					}
+				});
+				aThVocals.start();
+				aThDrums.start();
+				aThBass.start();
+				aThOther.start();
+				while(!(aDone[0] && aDone[1] && aDone[2] && aDone[3])){
+					try {
+						Thread.sleep(10);
+					} catch (Exception e) {
+					}
+				}
+				if(aIsPlaying) {
+					togglePlay();
+				}
 			}
 		});
-		Thread aThDrums = new Thread(new Runnable() {
-			@Override
-			public void run() {
-				playerDrums.click(x, y);
-				aDone[1] = true;
-			}
-		});
-		Thread aThBass = new Thread(new Runnable() {
-			@Override
-			public void run() {
-				playerBass.click(x, y);
-				aDone[2] = true;
-			}
-		});
-		Thread aThOther = new Thread(new Runnable() {
-			@Override
-			public void run() {
-				playerOther.click(x, y);
-				aDone[3] = true;
-			}
-		});
-		aThVocals.start();
-		aThDrums.start();
-		aThBass.start();
-		aThOther.start();
-		while(!(aDone[0] && aDone[1] && aDone[2] && aDone[3])){
-			try {
-				Thread.sleep(10);
-			} catch (Exception e) {
-			}
-		}
-		if(aIsPlaying) {
-			togglePlay();
-		}
+		aTh.start();
 	}
 	
 	void seek(long aTimeMS) {
-		boolean aIsPlaying = playerVocals.playState == 1;
-		if(aIsPlaying) {
-			togglePlay();
-		}
-		long aBitBef = 500;
-		playerVocals.seek(aTimeMS-aBitBef);
-		playerDrums.seek(aTimeMS-aBitBef);
-		playerBass.seek(aTimeMS-aBitBef);
-		playerOther.seek(aTimeMS-aBitBef);
-		if(aIsPlaying) {
-			togglePlay();
-		}
+		Thread aTh = new Thread(new Runnable() {
+			@Override
+			public void run() {
+				boolean aIsPlaying = playerVocals.playState == 1;
+				if(aIsPlaying) {
+					togglePlay();
+				}
+				final long aBitBef = 500;
+				final boolean[] aDone = new boolean[] {false,false,false,false}; 
+				Thread aThVocals = new Thread(new Runnable() {
+					@Override
+					public void run() {
+						playerVocals.seek(aTimeMS-aBitBef);
+						aDone[0] = true;
+					}
+				});
+				Thread aThDrums = new Thread(new Runnable() {
+					@Override
+					public void run() {
+						playerDrums.seek(aTimeMS-aBitBef);
+						aDone[1] = true;
+					}
+				});
+				Thread aThBass = new Thread(new Runnable() {
+					@Override
+					public void run() {
+						playerBass.seek(aTimeMS-aBitBef);
+						aDone[2] = true;
+					}
+				});
+				Thread aThOther = new Thread(new Runnable() {
+					@Override
+					public void run() {
+						playerOther.seek(aTimeMS-aBitBef);
+						aDone[3] = true;
+					}
+				});
+				aThVocals.start();
+				aThDrums.start();
+				aThBass.start();
+				aThOther.start();
+				while(!(aDone[0] && aDone[1] && aDone[2] && aDone[3])){
+					try {
+						Thread.sleep(10);
+					} catch (Exception e) {
+					}
+				}
+				if(aIsPlaying) {
+					togglePlay();
+				}
+			}
+		});
+		aTh.start();
 	}
 	
 	void togglePlay() {
@@ -605,18 +657,88 @@ public class KaiEditor {
 		});
 		editor.addKeyListener(new KeyListener() {
 			@Override
-			public void keyReleased(KeyEvent arg0) {
+			public void keyReleased(KeyEvent aKE) {
 				if(song == null) {
 					return;
 				}
 				try {
-					String aContent = editor.getText().replaceAll("\r*\n","\n");
-					if(!aContent.equals(editorLastContent)) {
-						editorLastContent = aContent;
-						song.kaiSrt.srt = aContent;
-						song.kaiSrt.srt2Text();
-						song.kaiSrt.resyncText2Srt();
-						song.kaiSrt.save(song.path+".ksrt.edited");
+					if(aKE.character==0x1a) {
+						//CTRL+Z
+						if(editorContentHistory.size() > 1) {
+							editorContentHistory.remove(editorContentHistory.size()-1);
+							String aContentOld = editorContentHistory.elementAt(editorContentHistory.size() - 1);
+							final int[] aHVPos = editorHVPosHistory.remove(editorHVPosHistory.size()-1);
+							String aContent = editor.getText();
+							TokenizerSimple aTS = new TokenizerSimple();
+							TokenizedSent aContentOldTS = aTS.tokenizeXmlSimple(aContentOld,null);
+							TokenizedSent aContentTS = aTS.tokenizeXmlSimple(aContent,null);
+							CubaixAlignerSimple aCAS = new CubaixAlignerSimple();
+							Vector<Pair> aPairs = aCAS.align(aContentOldTS, aContentTS);
+							int aDiffBeg = -1;
+							int aDiffEnd = -1;
+							int aDiffCharBeg = -1;
+							int aDiffCharEnd = -1;
+							int aCharPos = 0;
+							for(int p = 0;p < aPairs.size();p++) {
+								Pair aPair = aPairs.elementAt(p);
+								if(aPair.t2 != null) {
+									aCharPos = aPair.t2.charPos;
+								}
+								if(aPair.t1 == null || aPair.t2 == null || !aPair.t1.token.equals(aPair.t2.token)) {
+									//Diff
+									if(aDiffBeg < 0) {
+										aDiffBeg = p;
+										aDiffCharBeg = aCharPos;
+									}
+									aDiffEnd = p;
+									aDiffCharEnd = aCharPos;
+									if(aPair.t2 != null) {
+										aDiffCharEnd = aPair.t2.charPos+aPair.t2.token.length();
+									}
+								}
+								if(aPair.t2 != null) {
+									aCharPos = aPair.t2.charPos+aPair.t2.token.length();
+								}
+							}
+							if(aDiffBeg < 0) {
+								//No diff?
+								return;
+							}
+							StringBuffer aRepTxt = new StringBuffer();
+							for(int p = aDiffBeg;p <= aDiffEnd;p++) {
+								Pair aPair = aPairs.elementAt(p);
+								if(aPair.t1 != null) {
+									aRepTxt.append(aPair.t1.token);
+								}
+							}
+							
+							editor.setSelection(aDiffCharBeg, aDiffCharEnd);
+							editor.insert(aRepTxt.toString());
+							parentKDJ.display.asyncExec(new Runnable() {
+								public void run() {
+									editor.getVerticalBar().setSelection(aHVPos[0]);
+									editor.getHorizontalBar().setSelection(aHVPos[1]);
+								}
+							});
+							song.kaiSrt.srt = aContentOld;
+							song.kaiSrt.srt2Text();
+							song.kaiSrt.resyncText2Srt();
+							song.kaiSrt.save(song.path+".ksrt.edited");
+						}
+					}
+					else {
+						String aContent = editor.getText().replaceAll("\r*\n","\n");
+						String aLastContent = editorContentHistory.size() <= 0 ? null : editorContentHistory.lastElement();
+						if(aLastContent == null || !aContent.equals(aLastContent)) {
+							editorContentHistory.add(aContent);
+							int aVPos = editor.getVerticalBar().getSelection();
+							int aHPos = editor.getHorizontalBar().getSelection();
+							editorHVPosHistory.add(new int[] {aVPos,aHPos});
+							song.kaiSrt.srt = aContent;
+							song.kaiSrt.srt2Text();
+							song.kaiSrt.resyncText2Srt();
+							song.kaiSrt.save(song.path+".ksrt.edited");
+						}
 					}
 				} catch (Exception e) {
 					e.printStackTrace(System.err);
@@ -882,6 +1004,9 @@ public class KaiEditor {
 						editor.setText("Lyrics not available...");
 					}
 					else {
+						editorContentHistory.clear();
+						editorContentHistory.add(song.kaiSrt.srt);
+						editorHVPosHistory.add(new int[] {0,0});
 						editor.setText(song.kaiSrt.srt.replaceAll("\r*\n","\n"));
 					}
 				}
