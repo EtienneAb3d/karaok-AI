@@ -56,6 +56,7 @@ public class KaiScreener extends TimedCanvas {
 			public void keyPressed(KeyEvent arg0) {
 			}
 		});
+		//Si on change de chunk (partie de texte) on modifie l'affichage
 		Thread aTrackTh = new Thread(new Runnable() {
 			@Override
 			public void run() {
@@ -108,11 +109,11 @@ public class KaiScreener extends TimedCanvas {
 				Point aC = dblBufGC.textExtent("M");
 				int aPosY = dblBounds.y+dblBounds.height/2;
 				for(int i = currentKaiIdx;i >= 0 && i >= currentKaiIdx-5;i--) {
-					if(i >= aSong.kaiSrt.chunkTexts.size()) {
+					if(i >= aSong.kaiSrt.chunks.size()) {
 						aPosY -= aC.y;
 						continue;
 					}
-					String aKaiText = aSong.kaiSrt.chunkTexts.elementAt(i);
+					String aKaiText = aSong.kaiSrt.chunks.elementAt(i).getText();
 					if(i == currentKaiIdx) {
 						Point aE = dblBufGC.textExtent(aKaiText);
 						aPosY -= aE.y/2;
@@ -124,7 +125,7 @@ public class KaiScreener extends TimedCanvas {
 					}
 					aPosY -= aC.y;
 				}
-				for(int i = currentKaiIdx-5;i < aSong.kaiSrt.chunkTexts.size();i++) {
+				for(int i = currentKaiIdx-5;i < aSong.kaiSrt.chunks.size();i++) {
 					if(aPosY > dblBounds.height) {
 						break;
 					}
@@ -135,7 +136,7 @@ public class KaiScreener extends TimedCanvas {
 //						dblBufGC.setForeground(parentKDJ.logoLightC);
 //						dblBufGC.drawLine(dblBounds.x, aPosY, dblBounds.x+dblBounds.width, aPosY);
 //					}
-					String aKaiText = aSong.kaiSrt.chunkTexts.elementAt(i);
+					String aKaiText = aSong.kaiSrt.chunks.elementAt(i).getText();
 					if(i == currentKaiIdx) {
 						dblBufGC.setForeground(parentKDJ.logoLightC);
 					}

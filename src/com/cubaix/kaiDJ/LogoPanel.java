@@ -125,11 +125,11 @@ public class LogoPanel extends TimedCanvas {
 				int aPadding = 5;
 
 				int aKaiIdx = aPlayerSrt.kaiSrt.getChunkIdx(aPlayerSrt.getPositionMs());
-				String aKaiText = (aKaiIdx < 0) ? "" : aPlayerSrt.kaiSrt.chunkTexts.elementAt(aKaiIdx);
+				String aKaiText = (aKaiIdx < 0) ? "" : aPlayerSrt.kaiSrt.chunks.elementAt(aKaiIdx).getText();
 				aKaiText = aKaiText.replaceAll("\n", " ").trim();
 				
-				for(int i = aKaiIdx+1;i < aPlayerSrt.kaiSrt.chunkTexts.size();i++) {
-					String aKaiTextNext = aPlayerSrt.kaiSrt.chunkTexts.elementAt(i);
+				for(int i = aKaiIdx+1;i < aPlayerSrt.kaiSrt.chunks.size();i++) {
+					String aKaiTextNext = aPlayerSrt.kaiSrt.chunks.elementAt(i).getText();
 					aKaiText += (aKaiText.length() > 0 ? " — ":"")+aKaiTextNext.replaceAll("\n", " ").trim();
 				}
 				

@@ -111,7 +111,12 @@ public class DJPlayer extends TimedCanvas implements BasicPlayerListener, KJDigi
 				+ "- Click on bottom bar to change playing position\n"//
 				+ "- Click on right bar to change volume");
 	}
-
+	/**
+	 * 
+	 * @param x
+	 * @param y
+	 * @return 1 if clicking on timeline or 2 if clicking on Volume
+	 */
 	public int clickWhat(int x, int y) {
 		if (openProperties != null && progessBarR.width > 0 && x >= progessBarR.x && x < progessBarR.x + progessBarR.width && y >= progessBarR.y && y < progessBarR.y + progessBarR.height) {
 			return 1;//Seek

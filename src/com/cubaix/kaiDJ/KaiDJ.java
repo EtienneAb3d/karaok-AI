@@ -72,6 +72,8 @@ public class KaiDJ {
 	public Color whiteC;
 	public Color blackC;
 	public Color grayC;
+	public Color specialGreyC;
+	public Color secondBckC;
 	public Color blueC;
 	public Color redC;
 	public Color yellowC;
@@ -264,6 +266,7 @@ public class KaiDJ {
 		playerC = logoLightC;
 		playerBarC = new Color(display, 33, 59, 255);
 		selectedC =  new Color(display, 121, 44, 125);
+		secondBckC =  new Color(display, 0, 0, 130);
 
 		// Fonts
 		initialFont = mainGC.getFont();

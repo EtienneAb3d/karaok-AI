@@ -11,6 +11,7 @@ import javax.sound.sampled.SourceDataLine;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CLabel;
+import org.eclipse.swt.custom.ScrolledComposite;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.events.MouseEvent;
@@ -19,6 +20,8 @@ import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
+import org.eclipse.swt.events.ShellEvent;
+import org.eclipse.swt.events.ShellListener;
 import org.eclipse.swt.graphics.Cursor;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Rectangle;
@@ -56,6 +59,7 @@ public class KaiEditor {
 	public GC mainGC = null;
 	
 	LogoPanel logoPanel = null;
+	KaiTimeLine kaiTimeLine = null;
 	
 	KaiPlayer playerVocals = null;
 	KaiPlayer playerDrums = null;
@@ -84,6 +88,7 @@ public class KaiEditor {
 		// final jDJ aThis = this;
 		shell = new Shell(parentKDJ.display, SWT.SHELL_TRIM);
 		shell.setText("karaok-AI " + parentKDJ._VERSION);
+		
 		shell.open();
 		mainGC = new GC(shell);
 		shell.addPaintListener(new PaintListener() {
@@ -110,7 +115,9 @@ public class KaiEditor {
 		editor.setCursor(new Cursor(parentKDJ.display,SWT.CURSOR_UPARROW));
 		editor.setFont(parentKDJ.kaiFont);
 		
-		viewer = new KaiViewer(this); 
+		viewer = new KaiViewer(this);
+		
+		createTimeLine();
 		
 		createForm();
 		
@@ -184,7 +191,8 @@ public class KaiEditor {
 		// Other
 		playerOther = new KaiPlayer(parentKDJ, aPlayersC, SWT.NULL, parentKDJ.soundCardJava);
 		playerOther.setLayoutData(aGD);
-
+		
+		
 		// Get all sound cards
 		Mixer.Info[] mInfos = AudioSystem.getMixerInfo();
 		if (mInfos != null) {
@@ -275,6 +283,15 @@ public class KaiEditor {
 			}
 		});
 		soundCardOtherC.setLayoutData(aGDSel);
+		
+		
+	}
+	
+	void createTimeLine() {
+		kaiTimeLine = new KaiTimeLine(this,shell,SWT.NONE );
+		GridData aGD = new GridData(GridData.FILL_HORIZONTAL);
+		aGD.heightHint = 240;
+		kaiTimeLine.setLayoutData(aGD);
 	}
 
 	void createForm() {
@@ -476,6 +493,61 @@ public class KaiEditor {
 		aTh.start();
 	}
 	
+	void resetPlayers() {
+		Thread aTh = new Thread(new Runnable() {
+			@Override
+			public void run() {
+				boolean aIsPlaying = playerVocals.playState == 1;
+				if(aIsPlaying) {
+					togglePlay();
+				}
+				final boolean[] aDone = new boolean[] {false,false,false,false}; 
+				Thread aThVocals = new Thread(new Runnable() {
+					@Override
+					public void run() {
+						playerVocals.seek(0);
+						aDone[0] = true;
+					}
+				});
+				Thread aThDrums = new Thread(new Runnable() {
+					@Override
+					public void run() {
+						playerDrums.seek(0);
+						aDone[1] = true;
+					}
+				});
+				Thread aThBass = new Thread(new Runnable() {
+					@Override
+					public void run() {
+						playerBass.seek(0);
+						aDone[2] = true;
+					}
+				});
+				Thread aThOther = new Thread(new Runnable() {
+					@Override
+					public void run() {
+						playerOther.seek(0);
+						aDone[3] = true;
+					}
+				});
+				aThVocals.start();
+				aThDrums.start();
+				aThBass.start();
+				aThOther.start();
+				while(!(aDone[0] && aDone[1] && aDone[2] && aDone[3])){
+					try {
+						Thread.sleep(10);
+					} catch (Exception e) {
+					}
+				}
+				if(aIsPlaying) {
+					togglePlay();
+				}
+			}
+		});
+		aTh.start();
+	}
+	
 	void seek(long aTimeMS) {
 		Thread aTh = new Thread(new Runnable() {
 			@Override
@@ -574,7 +646,27 @@ public class KaiEditor {
 		}
 	}
 	
-	void createListeners() {
+	private void createListeners() {
+		
+		shell.addShellListener(new ShellListener() {
+			@Override
+			public void shellIconified(ShellEvent arg0) {}
+			@Override
+			public void shellDeiconified(ShellEvent arg0) {}
+			@Override
+			public void shellDeactivated(ShellEvent arg0) {}
+			@Override
+			public void shellClosed(ShellEvent arg0) {
+				boolean aIsPlaying = playerVocals.playState == 1;
+				if(aIsPlaying) {
+					togglePlay();
+				}
+				viewer.shell.dispose();
+			}
+			@Override
+			public void shellActivated(ShellEvent arg0) {}
+		});
+		
 		playerVocals.addMouseListener(new MouseListener() {
 			public void mouseDoubleClick(MouseEvent aEvt) {
 			}
@@ -658,93 +750,12 @@ public class KaiEditor {
 		editor.addKeyListener(new KeyListener() {
 			@Override
 			public void keyReleased(KeyEvent aKE) {
-				if(song == null) {
-					return;
-				}
 				try {
-					if(aKE.character==0x1a) {
-						//CTRL+Z
-						if(editorContentHistory.size() > 1) {
-							editorContentHistory.remove(editorContentHistory.size()-1);
-							String aContentOld = editorContentHistory.elementAt(editorContentHistory.size() - 1);
-							final int[] aHVPos = editorHVPosHistory.remove(editorHVPosHistory.size()-1);
-							String aContent = editor.getText();
-							TokenizerSimple aTS = new TokenizerSimple();
-							TokenizedSent aContentOldTS = aTS.tokenizeXmlSimple(aContentOld,null);
-							TokenizedSent aContentTS = aTS.tokenizeXmlSimple(aContent,null);
-							CubaixAlignerSimple aCAS = new CubaixAlignerSimple();
-							Vector<Pair> aPairs = aCAS.align(aContentOldTS, aContentTS);
-							int aDiffBeg = -1;
-							int aDiffEnd = -1;
-							int aDiffCharBeg = -1;
-							int aDiffCharEnd = -1;
-							int aCharPos = 0;
-							for(int p = 0;p < aPairs.size();p++) {
-								Pair aPair = aPairs.elementAt(p);
-								if(aPair.t2 != null) {
-									aCharPos = aPair.t2.charPos;
-								}
-								if(aPair.t1 == null || aPair.t2 == null || !aPair.t1.token.equals(aPair.t2.token)) {
-									//Diff
-									if(aDiffBeg < 0) {
-										aDiffBeg = p;
-										aDiffCharBeg = aCharPos;
-									}
-									aDiffEnd = p;
-									aDiffCharEnd = aCharPos;
-									if(aPair.t2 != null) {
-										aDiffCharEnd = aPair.t2.charPos+aPair.t2.token.length();
-									}
-								}
-								if(aPair.t2 != null) {
-									aCharPos = aPair.t2.charPos+aPair.t2.token.length();
-								}
-							}
-							if(aDiffBeg < 0) {
-								//No diff?
-								return;
-							}
-							StringBuffer aRepTxt = new StringBuffer();
-							for(int p = aDiffBeg;p <= aDiffEnd;p++) {
-								Pair aPair = aPairs.elementAt(p);
-								if(aPair.t1 != null) {
-									aRepTxt.append(aPair.t1.token);
-								}
-							}
-							
-							editor.setSelection(aDiffCharBeg, aDiffCharEnd);
-							editor.insert(aRepTxt.toString());
-							parentKDJ.display.asyncExec(new Runnable() {
-								public void run() {
-									editor.getVerticalBar().setSelection(aHVPos[0]);
-									editor.getHorizontalBar().setSelection(aHVPos[1]);
-								}
-							});
-							song.kaiSrt.srt = aContentOld;
-							song.kaiSrt.srt2Text();
-							song.kaiSrt.resyncText2Srt();
-							song.kaiSrt.save(song.path+".ksrt.edited");
-						}
-					}
-					else {
-						String aContent = editor.getText().replaceAll("\r*\n","\n");
-						String aLastContent = editorContentHistory.size() <= 0 ? null : editorContentHistory.lastElement();
-						if(aLastContent == null || !aContent.equals(aLastContent)) {
-							editorContentHistory.add(aContent);
-							int aVPos = editor.getVerticalBar().getSelection();
-							int aHPos = editor.getHorizontalBar().getSelection();
-							editorHVPosHistory.add(new int[] {aVPos,aHPos});
-							song.kaiSrt.srt = aContent;
-							song.kaiSrt.srt2Text();
-							song.kaiSrt.resyncText2Srt();
-							song.kaiSrt.save(song.path+".ksrt.edited");
-						}
-					}
+					keyEventHandler(aKE);
 				} catch (Exception e) {
-					e.printStackTrace(System.err);
+					// TODO Auto-generated catch block
+					e.printStackTrace();
 				}
-				viewer.screener.needRedraw();
-				logoPanel.needRedraw();
 			}
 			
 			@Override
@@ -765,6 +776,7 @@ public class KaiEditor {
 					}
 					aPos -= aL.length()+1;
 				}
+				if(aLine.contains("\r")) aLine = aLine.replace("\r", "");
 				if(aLine == null || !aLine.matches("[0-9]+:[0-9]+:[0-9]+[.,][0-9]+ --> .*")) {
 					return;
 				}
@@ -773,7 +785,15 @@ public class KaiEditor {
 						+Integer.parseInt(aHMS[1])*60*1000
 						+Integer.parseInt(aHMS[2])*1000
 						+Integer.parseInt(aHMS[3]);
+				
+				long aTimeEndMS = Integer.parseInt(aHMS[5])*3600*1000
+						+Integer.parseInt(aHMS[6])*60*1000
+						+Integer.parseInt(aHMS[7])*1000
+						+Integer.parseInt(aHMS[8]);
+				
+				
 				seek(aTimeMS);
+				kaiTimeLine.timestampClickHandler(aTimeMS, aTimeEndMS, editor.getSelection());
 //				int aClickedPos = playerVocals.progessBarR.x
 //						+(int)(playerVocals.progessBarR.width * aTimeMS / (double)playerVocals.getDurationTimeMs());
 //				clickSeek(aClickedPos, playerVocals.progessBarR.y);
@@ -934,6 +954,8 @@ public class KaiEditor {
 							}
 							song = new SongDescr(song);
 							load(song);
+							//Refreshing Timeline
+							kaiTimeLine.needRedraw("recalculateZ");
 							break;
 						}
 					}
@@ -996,7 +1018,8 @@ public class KaiEditor {
 			} catch (Exception e) {
 			}
 			togglePlay();
-			clickSeek(playerVocals.progessBarR.x, playerVocals.progessBarR.y);
+//			clickSeek(playerVocals.progessBarR.x, playerVocals.progessBarR.y);
+			
 			
 			parentKDJ.display.asyncExec(new Runnable() {
 				public void run() {
@@ -1005,13 +1028,114 @@ public class KaiEditor {
 					}
 					else {
 						editorContentHistory.clear();
-						editorContentHistory.add(song.kaiSrt.srt);
 						editorHVPosHistory.add(new int[] {0,0});
 						editor.setText(song.kaiSrt.srt.replaceAll("\r*\n","\n"));
+						editorContentHistory.add(editor.getText().replaceAll("\r*\n","\n"));
+						song.kaiSrt.setLinesChunk(editor.getText());
 					}
 				}
 			});
+			resetPlayers();
 		}
+	}
+	
+	public void keyEventHandler(KeyEvent aKE) throws Exception {
+		
+		if(song == null) {
+			return;
+		}
+		try {
+			if(aKE.character==0x1a) {
+				//CTRL+Z
+				if(editorContentHistory.size() > 1) {
+					editorContentHistory.remove(editorContentHistory.size()-1);
+					String aContentOld = editorContentHistory.elementAt(editorContentHistory.size() - 1);
+					final int[] aHVPos = editorHVPosHistory.remove(editorHVPosHistory.size()-1);
+					String aContent = editor.getText().replaceAll("\r*\n","\n");
+					
+					TokenizerSimple aTS = new TokenizerSimple();
+					TokenizedSent aContentOldTS = aTS.tokenizeXmlSimple(aContentOld,null);
+					TokenizedSent aContentTS = aTS.tokenizeXmlSimple(aContent,null);
+					CubaixAlignerSimple aCAS = new CubaixAlignerSimple();
+					Vector<Pair> aPairs = aCAS.align(aContentOldTS, aContentTS);
+					
+					int aDiffBeg = -1;
+					int aDiffEnd = -1;
+					int aDiffCharBeg = -1;
+					int aDiffCharEnd = -1;
+					int aCharPos = 0;
+					for(int p = 0;p < aPairs.size();p++) {
+						Pair aPair = aPairs.elementAt(p);
+						if(aPair.t2 != null) {
+							aCharPos = aPair.t2.charPos;
+						}
+						if(aPair.t1 == null || aPair.t2 == null || !aPair.t1.token.equals(aPair.t2.token)) {
+							//Diff
+							if(aDiffBeg < 0) {
+								aDiffBeg = p;
+								aDiffCharBeg = aCharPos;
+							}
+							aDiffEnd = p;
+							aDiffCharEnd = aCharPos;
+							if(aPair.t2 != null) {
+								aDiffCharEnd = aPair.t2.charPos+aPair.t2.token.length();
+							}
+						}
+						if(aPair.t2 != null) {
+							aCharPos = aPair.t2.charPos+aPair.t2.token.length();
+						}
+					}
+					if(aDiffBeg < 0) {
+						//No diff?
+						return;
+					}
+					
+					StringBuffer aRepTxt = new StringBuffer();
+					for(int p = aDiffBeg;p <= aDiffEnd;p++) {
+						Pair aPair = aPairs.elementAt(p);
+						if(aPair.t1 != null) {
+							aRepTxt.append(aPair.t1.token);
+						}
+					}
+					
+					editor.setSelection(aDiffCharBeg, aDiffCharEnd);
+					editor.insert(aRepTxt.toString());
+					
+					parentKDJ.display.asyncExec(new Runnable() {
+						public void run() {
+							editor.getVerticalBar().setSelection(aHVPos[0]);
+							editor.getHorizontalBar().setSelection(aHVPos[1]);
+						}
+					});
+					song.kaiSrt.srt = aContentOld;
+					song.kaiSrt.srt2Text();
+					song.kaiSrt.resyncText2Srt();
+					song.kaiSrt.setLinesChunk(editor.getText());
+					song.kaiSrt.save(song.path+".ksrt.edited");
+				}
+			} else {
+				String aContent = editor.getText().replaceAll("\r*\n","\n");
+				String aLastContent = editorContentHistory.size() <= 0 ? null : editorContentHistory.lastElement();
+				if(aLastContent == null || !aContent.equals(aLastContent)) {
+					editorContentHistory.add(aContent);
+					int aVPos = editor.getVerticalBar().getSelection();
+					int aHPos = editor.getHorizontalBar().getSelection();
+					editorHVPosHistory.add(new int[] {aVPos,aHPos});
+					
+					song.kaiSrt.srt = aContent;
+					song.kaiSrt.srt2Text();
+					song.kaiSrt.resyncText2Srt();
+					song.kaiSrt.setLinesChunk(editor.getText());
+					song.kaiSrt.save(song.path+".ksrt.edited");
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace(System.err);
+		}
+		viewer.screener.needRedraw();
+		logoPanel.needRedraw();
+		kaiTimeLine.needRedraw("editor");
+		
 	}
 	
 	public static void main(String[] args) {

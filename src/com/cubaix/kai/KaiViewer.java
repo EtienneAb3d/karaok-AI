@@ -5,11 +5,15 @@ import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseListener;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
+import org.eclipse.swt.events.ShellEvent;
+import org.eclipse.swt.events.ShellListener;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 
 import com.cubaix.kaiDJ.KaiDJ;
@@ -52,20 +56,8 @@ public class KaiViewer {
 		screener.setLayoutData(aGD);
 		screener.setBackground(parentKE.parentKDJ.playerC);
 		screener.setForeground(parentKE.parentKDJ.blackC);
-		screener.addMouseListener(new MouseListener() {
-			@Override
-			public void mouseUp(MouseEvent arg0) {
-				shell.setFullScreen(!shell.getFullScreen());
-			}
-			
-			@Override
-			public void mouseDown(MouseEvent arg0) {
-			}
-			
-			@Override
-			public void mouseDoubleClick(MouseEvent arg0) {
-			}
-		});
+		
+		createListeners();
 		
 		shell.pack();
 		// Size
@@ -89,6 +81,42 @@ public class KaiViewer {
 			aR.height = KaiDJ._SIZE_FOR_SCREENSHOTS_H;
 		}
 		shell.setBounds(aR);
+	}
+	
+	private void createListeners() {
+		
+		shell.addShellListener(new ShellListener() {
+            public void shellIconified(ShellEvent e) {
+            }
+            public void shellDeiconified(ShellEvent e) {
+            }
+            public void shellDeactivated(ShellEvent e) {
+            }
+            public void shellClosed(ShellEvent e) {
+            	boolean aIsPlaying = parentKE.playerVocals.playState == 1;
+				if(aIsPlaying) {
+					parentKE.togglePlay();
+				}
+                parentKE.shell.dispose();
+            }
+            public void shellActivated(ShellEvent e) {
+            }
+        });
+		
+		screener.addMouseListener(new MouseListener() {
+			@Override
+			public void mouseUp(MouseEvent arg0) {
+				shell.setFullScreen(!shell.getFullScreen());
+			}
+			
+			@Override
+			public void mouseDown(MouseEvent arg0) {
+			}
+			
+			@Override
+			public void mouseDoubleClick(MouseEvent arg0) {
+			}
+		});
 	}
 
 	void paint() {
@@ -115,4 +143,5 @@ public class KaiViewer {
 			t.printStackTrace(System.err);
 		}
 	}
+	
 }
