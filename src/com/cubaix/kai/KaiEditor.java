@@ -11,7 +11,6 @@ import javax.sound.sampled.SourceDataLine;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CLabel;
-import org.eclipse.swt.custom.ScrolledComposite;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.events.MouseEvent;
@@ -793,7 +792,7 @@ public class KaiEditor {
 				
 				
 				seek(aTimeMS);
-				kaiTimeLine.timestampClickHandler(aTimeMS, aTimeEndMS, editor.getSelection());
+				kaiTimeLine.timestampClickHandler(aTimeMS, aTimeEndMS);
 //				int aClickedPos = playerVocals.progessBarR.x
 //						+(int)(playerVocals.progessBarR.width * aTimeMS / (double)playerVocals.getDurationTimeMs());
 //				clickSeek(aClickedPos, playerVocals.progessBarR.y);

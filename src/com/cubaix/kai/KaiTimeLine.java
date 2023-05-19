@@ -1,32 +1,17 @@
 package com.cubaix.kai;
 
-import java.io.PrintStream;
-import java.util.Vector;
-import java.util.concurrent.TimeUnit;
-
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.KeyEvent;
-import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseListener;
 import org.eclipse.swt.events.MouseMoveListener;
-import org.eclipse.swt.events.MouseTrackListener;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.graphics.Cursor;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Event;
-import org.eclipse.swt.widgets.Listener;
-import org.eclipse.swt.widgets.ScrollBar;
 
-import com.cubAIx.WhisperTimeSync.CubaixAlignerSimple;
-import com.cubAIx.WhisperTimeSync.Pair;
-import com.cubAIx.WhisperTimeSync.TokenizedSent;
-import com.cubAIx.WhisperTimeSync.TokenizerSimple;
 import com.cubaix.kaiDJ.KaiDJ;
 import com.cubaix.kaiDJ.db.SongDescr;
 import com.cubaix.kaiDJ.swt.TimedCanvas;
@@ -43,7 +28,6 @@ public class KaiTimeLine extends TimedCanvas {
 	
 	//ScaleBar Time in ms
 	private Long Tstart = (long) -1;
-	private Long Tend = (long) -1;
 	
 	private Long TstartChunk = (long) -1;
 	private Long TendChunk = (long) -1;
@@ -72,8 +56,6 @@ public class KaiTimeLine extends TimedCanvas {
 	private final int firstLine = scaleBarHeight+chunkHeight;
 	private final int secondLine = scaleBarHeight+ chunkHeight*2;
 	
-	private Point editorSelection = null;
-	
 	//Menu
 	private final Rectangle previousButton = new Rectangle(0,240-21,20,20); //240 height of the timeline
 	private final Rectangle nextButton = new Rectangle(21,240-21,20,20);
@@ -95,13 +77,12 @@ public class KaiTimeLine extends TimedCanvas {
 		createListeners();
 	}
 	
-	public void timestampClickHandler(Long timeMS, Long timeEndMS, Point editorSelection ) {
+	public void timestampClickHandler(Long timeMS, Long timeEndMS) {
 		this.currentKaiIdx = song.kaiSrt.newGetChunkIdx(timeMS, timeEndMS);
-		this.editorSelection = editorSelection;
 		needRedraw("recalculateZ");
 	}
 
-	public void calculate() {
+	public void calculateScaleFactor() {
 		song = parentKE.song;
 		Long duréeMoyenneChunk;
 		
@@ -145,7 +126,7 @@ public class KaiTimeLine extends TimedCanvas {
 			public void paintControl(PaintEvent aPE) {
 				
 				timeLineBounds = getClientArea();
-				calculate();
+				calculateScaleFactor();
 				
 				GC aPlGC = new GC(aThis);
 				paintDbl(aPlGC);
@@ -163,6 +144,7 @@ public class KaiTimeLine extends TimedCanvas {
 					
 					previousButIsClicked = false;
 					nextButIsClicked = false;
+					musicButIsClicked = false;
 					
 					needRedraw();
 				}else if(mainChunkIsClicked || markOneIsClicked || markTwoIsClicked) {
@@ -171,7 +153,6 @@ public class KaiTimeLine extends TimedCanvas {
 					try {
 						editFile();
 					} catch (Exception e) {
-						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
 					
@@ -235,7 +216,7 @@ public class KaiTimeLine extends TimedCanvas {
 					markOneIsClicked = true;
 					return true;
 				} else if (
-						// Checking if mouse coordinates are on the previus button:
+						// Checking if mouse coordinates are on the previous button:
 						arg0.x >= previousButton.x && arg0.x <= previousButton.x + previousButton.width && 
 						arg0.y >= previousButton.y && arg0.y <= previousButton.y + previousButton.height) {
 					previousButIsClicked = true;
@@ -258,9 +239,7 @@ public class KaiTimeLine extends TimedCanvas {
 			}
 			
 			@Override
-			public void mouseDoubleClick(MouseEvent arg0) {
-				
-			}
+			public void mouseDoubleClick(MouseEvent arg0) {}
 		});
 		
 		/**
@@ -306,20 +285,21 @@ public class KaiTimeLine extends TimedCanvas {
 			}
 		});
 	}
-
+	
+	/**
+	 * Modifying text editor content before saving modification on file (happens when a chunk is modified in the time line)
+	 * @throws Exception
+	 */
 	protected void editFile() throws Exception {
 		String newLine = "";
 		if (mainChunkIsClicked) {
 			newLine = ChunkStr.getTimeMSToFormatTimestamp((Tstart/Z+maintimeStamp.x)*Z)+" --> "+ChunkStr.getTimeMSToFormatTimestamp((Tstart/Z+maintimeStamp.x+maintimeStamp.width)*Z);
-			System.out.println(newLine);
 		}
 		if (markOneIsClicked) {
 			newLine = ChunkStr.getTimeMSToFormatTimestamp((Tstart/Z+maintimeStamp.x)*Z)+" --> "+ChunkStr.getTimeMSToFormatTimestamp(song.kaiSrt.chunks.get(currentKaiIdx).getEndTime());
-			System.out.println(newLine);
 		}
 		if (markTwoIsClicked) {
 			newLine = ChunkStr.getTimeMSToFormatTimestamp(song.kaiSrt.chunks.get(currentKaiIdx).getStartTime())+" --> "+ChunkStr.getTimeMSToFormatTimestamp((Tstart/Z+maintimeStamp.x+maintimeStamp.width)*Z);
-			System.out.println(newLine);
 		}
 		parentKE.editor.clearSelection();
 		parentKE.editor.setSelection(song.kaiSrt.chunks.get(currentKaiIdx).editorTimestampLine[0], song.kaiSrt.chunks.get(currentKaiIdx).editorTimestampLine[1]);
@@ -355,7 +335,6 @@ public class KaiTimeLine extends TimedCanvas {
 				}
 				dblBuf = new Image(parentKDJ.display, timeLineBounds);
 				dblBufGC = new GC(dblBuf);
-				
 			}
 			
 			dblBufGC.setForeground(parentKDJ.whiteC);
@@ -479,26 +458,40 @@ public class KaiTimeLine extends TimedCanvas {
 		aPlayerGC.setForeground(parentKDJ.blackC);
 		aPlayerGC.drawImage(dblBuf, timeLineBounds.x, timeLineBounds.y);
 	}
-
-	@Override
-	public void needRedraw() {
-		super.needRedraw();
-	}
 	
+	
+	/**
+	 * Different type of redraw for multiple cases
+	 * @param event
+	 */
 	public void needRedraw(String event) {
-		
 		switch (event) {
+		// redrawing after key press event on the text editor
 		case "editor":
-			currentKaiIdx = 0;
-			calculate();
+			checkForCurrentChunkIndex();
+			calculateScaleFactor();
 			super.needRedraw();
 			break;
+		// recalculating scale factor before redrawing
 		case "recalculateZ":
-			calculate();
+			calculateScaleFactor();
 			super.needRedraw();
 			break;
 		default:
 			throw new IllegalArgumentException("Unexpected value: " + event);
+		}
+	}
+	
+	/**
+	 * This is in case if a time stamp is manually modified in the text editor
+	 * It check if the current chunk index is in bounds of the kaiStr chunk vector
+	 */
+	private void checkForCurrentChunkIndex() {
+		int chunksSize = song.kaiSrt.chunks.size();
+		if(chunksSize > 0) {
+			if(currentKaiIdx > chunksSize-1) currentKaiIdx = chunksSize-1;
+		} else {
+			currentKaiIdx = -1;
 		}
 	}
 }

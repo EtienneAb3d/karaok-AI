@@ -20,10 +20,6 @@ public class KaiSrt {
 	String lng = "xx";
 	
 	public Vector<ChunkStr> chunks = new Vector<ChunkStr>();
-	
-//	public Vector<String> chunkTexts = new Vector<String>();
-//	public Vector<Long> chunkStarts = new Vector<Long>();
-//	public Vector<Long> chunkStops = new Vector<Long>();
 
 	public KaiSrt(String aPath) {
 		path = aPath;
@@ -39,16 +35,6 @@ public class KaiSrt {
 		}
 		return -1;
 	}
-	
-//	public int newGetChunkIdx(long timeStart, long timeEnds) {
-//		if(chunkStarts.size() <= 0) {
-//			return -1;
-//		}
-//		for (int i = 0; i < chunkStarts.size(); i++) {
-//			if(chunkStarts.get(i) == timeStart && chunkStops.get(i) == timeEnds) return i;
-//		}
-//		return -1;
-//	}
 	
 	public int getChunkIdx(long aTimeMS) {
 		if(chunks.size() <= 0) {
@@ -73,29 +59,6 @@ public class KaiSrt {
 		return -1;
 	}
 	
-//	public int getChunkIdx(long aTimeMS) {
-//		if(chunks.size() <= 0) {
-//			return -1;
-//		}
-//		if(aTimeMS < chunkStarts.elementAt(0)) {
-//			return -1;
-//		}
-//		for(int l = 0;l < chunkTexts.size();l++) {
-//			if(chunkStarts.elementAt(l) <= aTimeMS && chunkStops.elementAt(l) > aTimeMS) {
-//				return l;
-//			}
-//		}
-//		for(int l = 0;l < chunkTexts.size();l++) {
-//			if(chunkStops.elementAt(l) > aTimeMS) {
-//				return l-1;
-//			}
-//		}
-//		if(aTimeMS > chunkStops.elementAt(chunkStops.size()-1)) {
-//			return chunkStops.size();
-//		}
-//		return -1;
-//	}
-	
 	public int getChunkIdxJustBefore(long aTimeMS) {
 		for(int l = 0;l < chunks.size();l++) {
 			if(chunks.elementAt(l).getStartTime() <= aTimeMS+1000 && chunks.elementAt(l).getStartTime() > aTimeMS) {
@@ -105,15 +68,6 @@ public class KaiSrt {
 		return -1;
 	}
 	
-//	public int getChunkIdxJustBefore(long aTimeMS) {
-//		for(int l = 0;l < chunkTexts.size();l++) {
-//			if(chunkStarts.elementAt(l) <= aTimeMS+1000 && chunkStarts.elementAt(l) > aTimeMS) {
-//				return l;
-//			}
-//		}
-//		return -1;
-//	}
-	
 	public String getChunkText(long aTimeMS) {
 		int aIdx = getChunkIdx(aTimeMS);
 		if(aIdx < 0) {
@@ -121,14 +75,6 @@ public class KaiSrt {
 		}
 		return chunks.elementAt(aIdx).getText();
 	}
-//	
-//	public String getChunkText(long aTimeMS) {
-//		int aIdx = getChunkIdx(aTimeMS);
-//		if(aIdx < 0) {
-//			return "";
-//		}
-//		return chunkTexts.elementAt(aIdx);
-//	}
 	
 	public void load() {
 		try {
@@ -209,9 +155,6 @@ public class KaiSrt {
 		boolean aEmptyFound=true;
 		StringBuffer aSB = new StringBuffer();
 		
-//		chunkTexts = new Vector<String>();
-//		chunkStarts = new Vector<Long>();
-//		chunkStops = new Vector<Long>();
 		chunks = new Vector<ChunkStr>();
 		
 		for(String aL : aSync.split("\n")) {
@@ -230,26 +173,19 @@ public class KaiSrt {
 			}
 			if(aL.matches("[0-9][0-9]:[0-9][0-9]:[0-9][0-9][.,][0-9][0-9][0-9] --> [0-9][0-9]:[0-9][0-9]:[0-9][0-9][.,][0-9][0-9][0-9]")) {
 				
-//				int firstLength = aSB.length()-1;
 				aSB.append(aL);
-//				int secondLength = aSB.length()-1;
 				
 				aSB.append("\n");
-				
-//				chunk.setEditorTimestampLine(firstLength, secondLength);
-//				chunkTexts.add("");
 				chunk.setText("");
 				Integer aStartH = Integer.parseInt(aL.substring(0, 2));
 				Integer aStartM = Integer.parseInt(aL.substring(3, 5));
 				Integer aStartS = Integer.parseInt(aL.substring(6, 8));
 				Integer aStartMS = Integer.parseInt(aL.substring(9, 12));
-//				chunkStarts.add((long)(aStartH*60*60*1000+aStartM*60*1000+aStartS*1000+aStartMS));
 				chunk.setStartTime((long)(aStartH*60*60*1000+aStartM*60*1000+aStartS*1000+aStartMS));
 				Integer aStopH = Integer.parseInt(aL.substring(17, 19));
 				Integer aStopM = Integer.parseInt(aL.substring(20, 22));
 				Integer aStopS = Integer.parseInt(aL.substring(23, 25));
 				Integer aStopMS = Integer.parseInt(aL.substring(26, 29));
-//				chunkStops.add((long)(aStopH*60*60*1000+aStopM*60*1000+aStopS*1000+aStopMS));
 				chunk.setEndTime((long)(aStopH*60*60*1000+aStopM*60*1000+aStopS*1000+aStopMS));
 				chunks.add(chunk);
 				continue;
@@ -260,7 +196,6 @@ public class KaiSrt {
 				aSB.append("\n");
 				continue;
 			}
-//			String aCurrent = chunkTexts.elementAt(chunkTexts.size()-1);
 			String aCurrent = chunks.elementAt(chunks.size()-1).getText();
 			if(aCurrent.length() > 0) {
 				aSB.append("\n");
@@ -268,7 +203,6 @@ public class KaiSrt {
 			}
 			aSB.append(aL);
 			aCurrent += aL;
-//			chunkTexts.setElementAt(aCurrent,chunkTexts.size()-1);
 			chunks.get(chunks.size()-1).setText(aCurrent);
 			
 		}
@@ -333,16 +267,5 @@ public class KaiSrt {
 			chunk.setEditorTimestampLine(index, index+29);
 		}
 	}
-	
-//	public static void main(String[] args) {
-//		try {
-//			KaiSrt aSrt = new KaiSrt("/home/cubaix/Musique/MP3/Soiree3eme/Best of 2011/Katy Perry - Firework.mp3");
-//			for(int l = 0;l < aSrt.chunkTexts.size();l++) {
-//				System.out.println(aSrt.chunkStarts.elementAt(l)+" --> "+aSrt.chunkStops.elementAt(l)+" "+aSrt.chunkTexts.elementAt(l));
-//			}
-//		} catch (Exception e) {
-//			e.printStackTrace(System.err);
-//		}
-//	}
 
 }
