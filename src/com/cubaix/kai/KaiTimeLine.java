@@ -74,6 +74,7 @@ public class KaiTimeLine extends TimedCanvas {
 		refreshRate = 50;
 		
 		maintimeStamp = new Rectangle(0, firstLine, 0, chunkHeight);
+		
 		createListeners();
 	}
 	
@@ -84,10 +85,12 @@ public class KaiTimeLine extends TimedCanvas {
 
 	public void calculateScaleFactor() {
 		song = parentKE.song;
-		Long duréeMoyenneChunk;
+		//Checking for the first time if chunks are available (in case of an empty file at the start)
+		if(song.kaiSrt.chunks.size() == 0) currentKaiIdx = -1;
 		
 		//Cheking if the song is available for karaok-ai
-		if(song.kaiSrt != null) {
+		if(song.kaiSrt != null && currentKaiIdx != -1) {
+			Long duréeMoyenneChunk;
 			
 			TstartChunk = song.kaiSrt.chunks.get(currentKaiIdx).getStartTime();
 			TendChunk = song.kaiSrt.chunks.get(currentKaiIdx).getEndTime();
@@ -113,6 +116,7 @@ public class KaiTimeLine extends TimedCanvas {
 			maintimeStamp.width = widthMainChunk.intValue();
 			
 		} else {
+			Tstart = (long) 0;
 			
 			Z = (long) 100;
 			Tstart = (long) 0;
@@ -135,7 +139,10 @@ public class KaiTimeLine extends TimedCanvas {
 			}
 		});
 		addMouseListener(new MouseListener() {
-			
+			/**
+			 * Applying changes when mouse is up and reseting booleans
+			 * @param arg0
+			 */
 			@Override
 			public void mouseUp(MouseEvent arg0) {	
 				if(previousButIsClicked || nextButIsClicked || musicButIsClicked) {
@@ -187,48 +194,54 @@ public class KaiTimeLine extends TimedCanvas {
 
 			@Override
 			public void mouseDown(MouseEvent arg0) {
-				if (song.kaiSrt != null && isSomethingIsClicked(arg0)) {
+				if (song.kaiSrt != null && currentKaiIdx != -1 && isSomethingIsClicked(arg0)) {
 					xCurrentMousePos = arg0.x;
 					needRedraw();
 				}
 			}
 			
+			/**
+			 * Looking if some dynamic content has been clicked and updating concerned boolean to make active the MouseEventListener
+			 * 
+			 * @param MouseEvent arg0 
+			 * @return boolean
+			 */
 			private boolean isSomethingIsClicked(MouseEvent arg0) {
 				if (
-				// Checking if mouse coordinates are on the main chunk:
+				//Main Chunk
 				arg0.x >= maintimeStamp.x && arg0.x <= maintimeStamp.x + maintimeStamp.width && 
 				arg0.y >= firstLine && arg0.y <= secondLine) {
 					aThis.setCursor(new Cursor(parentKDJ.display,SWT.CURSOR_SIZEALL));
 					mainChunkIsClicked = true;
 					return true;
 				} else if (
-						// Checking if mouse coordinates are on the second mark:
+						//Ending time handle
 						arg0.x >= maintimeStamp.x+maintimeStamp.width && arg0.x <= maintimeStamp.x + maintimeStamp.width + 6 && 
 						arg0.y >= firstLine+16 && arg0.y <= firstLine+16+34) {
 					aThis.setCursor(new Cursor(parentKDJ.display,SWT.CURSOR_SIZEE));
 					markTwoIsClicked = true;
 					return true;
 				} else if (
-						// Checking if mouse coordinates are on the first mark:
+						//Starting time handle
 						arg0.x >= maintimeStamp.x-6 && arg0.x <= maintimeStamp.x && 
 						arg0.y >= firstLine+16 && arg0.y <= firstLine+16+34) {
 					aThis.setCursor(new Cursor(parentKDJ.display,SWT.CURSOR_SIZEE));
 					markOneIsClicked = true;
 					return true;
 				} else if (
-						// Checking if mouse coordinates are on the previous button:
+						//Menu previous button
 						arg0.x >= previousButton.x && arg0.x <= previousButton.x + previousButton.width && 
 						arg0.y >= previousButton.y && arg0.y <= previousButton.y + previousButton.height) {
 					previousButIsClicked = true;
 					return true;
 				} else if (
-						// Checking if mouse coordinates are on the next button:
+						//Menu next button:
 						arg0.x >= nextButton.x && arg0.x <= nextButton.x + nextButton.width && 
 						arg0.y >= nextButton.y && arg0.y <= nextButton.y + nextButton.height) {
 					nextButIsClicked = true;
 					return true;
 				} else if (
-						// Checking if mouse coordinates are on the music button:
+						//Menu music button:
 						arg0.x >= musicButton.x && arg0.x <= musicButton.x + musicButton.width && 
 						arg0.y >= musicButton.y && arg0.y <= musicButton.y + musicButton.height) {
 					musicButIsClicked = true;
@@ -243,7 +256,12 @@ public class KaiTimeLine extends TimedCanvas {
 		});
 		
 		/**
-		 * Managing chunk resizing when clicking on it or on handles
+		 * Listening mouse moves only when the chunk or handles are clicked
+		 * and manage new chunk position
+		 * 
+		 * Constraints :
+		 * 	- Chunk cannot be moved out of time line bounds
+		 *  - Starting time handle cannot be moved after the Ending time handle (and vice versa)
 		 */
 		addMouseMoveListener(new MouseMoveListener() {
 			private int newPos;
@@ -461,7 +479,7 @@ public class KaiTimeLine extends TimedCanvas {
 	
 	
 	/**
-	 * Different type of redraw for multiple cases
+	 * Different type of events before a new redraw
 	 * @param event
 	 */
 	public void needRedraw(String event) {
@@ -483,15 +501,18 @@ public class KaiTimeLine extends TimedCanvas {
 	}
 	
 	/**
-	 * This is in case if a time stamp is manually modified in the text editor
-	 * It check if the current chunk index is in bounds of the kaiStr chunk vector
+	 * This is done in case a time stamp is manually modified in the text editor
+	 * It check if the current chunk index is still in bounds of the kaiStr chunk vector
 	 */
 	private void checkForCurrentChunkIndex() {
 		int chunksSize = song.kaiSrt.chunks.size();
 		if(chunksSize > 0) {
 			if(currentKaiIdx > chunksSize-1) currentKaiIdx = chunksSize-1;
+			if(currentKaiIdx < 0) currentKaiIdx = 0;
 		} else {
+			//Here no more chunks are available in kaiStr (no more time stamp in kaiStr files)
 			currentKaiIdx = -1;
+			
 		}
 	}
 }

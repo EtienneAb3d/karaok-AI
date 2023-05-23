@@ -260,12 +260,10 @@ public class KaiSrt {
 	}
 
 	public void setLinesChunk(String text2) {
-		// TODO Auto-generated method stub
 		for (ChunkStr chunk : chunks) {
 			String timestampLine = chunk.getStartTimeToFormatTimestamp() +" --> "+chunk.getEndTimeToFormatTimestamp();
 			int index = text2.indexOf(timestampLine);
 			chunk.setEditorTimestampLine(index, index+29);
 		}
 	}
-
 }
