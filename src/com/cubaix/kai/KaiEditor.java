@@ -11,6 +11,8 @@ import javax.sound.sampled.SourceDataLine;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CLabel;
+import org.eclipse.swt.custom.StyledText;
+import org.eclipse.swt.events.KeyAdapter;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.events.MouseEvent;
@@ -72,11 +74,13 @@ public class KaiEditor {
 	
 	SongDescr song = null;
 	String songLng = "??";
-	Text editor = null;
+	StyledText editor = null;
 	Vector<String> editorContentHistory = new Vector<String>();
 	Vector<int[]> editorHVPosHistory = new Vector<int[]>();
 	
 	KaiViewer viewer = null;
+
+	public boolean currentlySeeking = false;
 	
 	public KaiEditor(KaiDJ aParentKDJ) {
 		parentKDJ = aParentKDJ;
@@ -84,6 +88,8 @@ public class KaiEditor {
 	}
 	
 	void createInterface() {
+		
+		
 		// final jDJ aThis = this;
 		shell = new Shell(parentKDJ.display, SWT.SHELL_TRIM);
 		shell.setText("karaok-AI " + parentKDJ._VERSION);
@@ -95,6 +101,7 @@ public class KaiEditor {
 				paint();
 			}
 		});
+		
 		shell.setImage(parentKDJ.kaiIcon);
 		GridLayout gridLayout = new GridLayout();
 		gridLayout.numColumns = 1;
@@ -106,7 +113,7 @@ public class KaiEditor {
 		
 		createPlayers();
 		
-		editor = new Text(shell,SWT.MULTI|SWT.V_SCROLL|SWT.H_SCROLL);
+		editor = new StyledText(shell,SWT.MULTI|SWT.V_SCROLL|SWT.H_SCROLL);
 		GridData aGD = new GridData(GridData.FILL_BOTH);
 		editor.setLayoutData(aGD);
 		editor.setBackground(parentKDJ.playerC);
@@ -548,13 +555,20 @@ public class KaiEditor {
 	}
 	
 	void seek(long aTimeMS) {
+		
+		//Ajout boolean pour savoir si des threads sont déjà en cours d'execution
+		currentlySeeking = true;
+		
 		Thread aTh = new Thread(new Runnable() {
 			@Override
 			public void run() {
+				
 				boolean aIsPlaying = playerVocals.playState == 1;
+				
 				if(aIsPlaying) {
 					togglePlay();
 				}
+				
 				final long aBitBef = 500;
 				final boolean[] aDone = new boolean[] {false,false,false,false}; 
 				Thread aThVocals = new Thread(new Runnable() {
@@ -598,6 +612,8 @@ public class KaiEditor {
 				if(aIsPlaying) {
 					togglePlay();
 				}
+				
+				currentlySeeking = false;
 			}
 		});
 		aTh.start();
@@ -746,25 +762,22 @@ public class KaiEditor {
 			public void mouseUp(MouseEvent arg0) {
 			}
 		});
-		editor.addKeyListener(new KeyListener() {
-			@Override
-			public void keyReleased(KeyEvent aKE) {
+		
+		editor.addKeyListener(new KeyAdapter() {
+			public void keyPressed(KeyEvent aKe) {
 				try {
-					keyEventHandler(aKE);
+					keyEventHandler(aKe);
 				} catch (Exception e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
-			}
-			
-			@Override
-			public void keyPressed(KeyEvent arg0) {
-			}
+		     }
 		});
 		editor.addMouseListener(new MouseListener() {
 			@Override
 			public void mouseUp(MouseEvent aE) {
-				int aPos = editor.getCaretPosition();
+//				int aPos = editor.getCaretPosition();
+				
+				int aPos = editor.getCaretOffset();
 				String aTxt = editor.getText();
 				String aLine = null;
 				String[] aLines = aTxt.split("\n");
@@ -953,8 +966,6 @@ public class KaiEditor {
 							}
 							song = new SongDescr(song);
 							load(song);
-							//Refreshing Timeline
-							kaiTimeLine.needRedraw("recalculateZ");
 							break;
 						}
 					}
@@ -1029,8 +1040,10 @@ public class KaiEditor {
 						editorContentHistory.clear();
 						editorHVPosHistory.add(new int[] {0,0});
 						editor.setText(song.kaiSrt.srt.replaceAll("\r*\n","\n"));
-						editorContentHistory.add(editor.getText().replaceAll("\r*\n","\n"));
+//						editorContentHistory.add(editor.getText().replaceAll("\r*\n","\n"));
+						editorContentHistory.add(editor.getText());
 						song.kaiSrt.setLinesChunk(editor.getText());
+						kaiTimeLine.needRedraw("init");
 					}
 				}
 			});
@@ -1039,18 +1052,20 @@ public class KaiEditor {
 	}
 	
 	public void keyEventHandler(KeyEvent aKE) throws Exception {
-		
 		if(song == null) {
 			return;
 		}
+		//We don't want to handle : CTRL key pressed action, to avoid useless actions
+		boolean notCtrlPressed = aKE.keyCode != SWT.CTRL;
 		try {
-			if(aKE.character==0x1a) {
+			if(((aKE.stateMask & SWT.CTRL) == SWT.CTRL) && (aKE.keyCode == 'z')) {
 				//CTRL+Z
 				if(editorContentHistory.size() > 1) {
 					editorContentHistory.remove(editorContentHistory.size()-1);
 					String aContentOld = editorContentHistory.elementAt(editorContentHistory.size() - 1);
 					final int[] aHVPos = editorHVPosHistory.remove(editorHVPosHistory.size()-1);
-					String aContent = editor.getText().replaceAll("\r*\n","\n");
+					String aContent = editor.getText();
+					//String aContent = editor.getText().replaceAll("\r*\n","\n");
 					
 					TokenizerSimple aTS = new TokenizerSimple();
 					TokenizedSent aContentOldTS = aTS.tokenizeXmlSimple(aContentOld,null);
@@ -1063,10 +1078,12 @@ public class KaiEditor {
 					int aDiffCharBeg = -1;
 					int aDiffCharEnd = -1;
 					int aCharPos = 0;
+					
 					for(int p = 0;p < aPairs.size();p++) {
 						Pair aPair = aPairs.elementAt(p);
 						if(aPair.t2 != null) {
 							aCharPos = aPair.t2.charPos;
+							if(aPair.t2.token.equals("\n"));
 						}
 						if(aPair.t1 == null || aPair.t2 == null || !aPair.t1.token.equals(aPair.t2.token)) {
 							//Diff
@@ -1078,6 +1095,7 @@ public class KaiEditor {
 							aDiffCharEnd = aCharPos;
 							if(aPair.t2 != null) {
 								aDiffCharEnd = aPair.t2.charPos+aPair.t2.token.length();
+								
 							}
 						}
 						if(aPair.t2 != null) {
@@ -1096,7 +1114,6 @@ public class KaiEditor {
 							aRepTxt.append(aPair.t1.token);
 						}
 					}
-					
 					editor.setSelection(aDiffCharBeg, aDiffCharEnd);
 					editor.insert(aRepTxt.toString());
 					
@@ -1106,14 +1123,17 @@ public class KaiEditor {
 							editor.getHorizontalBar().setSelection(aHVPos[1]);
 						}
 					});
+					
 					song.kaiSrt.srt = aContentOld;
 					song.kaiSrt.srt2Text();
 					song.kaiSrt.resyncText2Srt();
-					song.kaiSrt.setLinesChunk(editor.getText());
 					song.kaiSrt.save(song.path+".ksrt.edited");
+					song.kaiSrt.setLinesChunk(editor.getText());
 				}
-			} else {
-				String aContent = editor.getText().replaceAll("\r*\n","\n");
+			} else if (notCtrlPressed) {
+				
+				//String aContent = editor.getText().replaceAll("\r*\n","\n");
+				String aContent = editor.getText();
 				String aLastContent = editorContentHistory.size() <= 0 ? null : editorContentHistory.lastElement();
 				if(aLastContent == null || !aContent.equals(aLastContent)) {
 					editorContentHistory.add(aContent);
@@ -1131,10 +1151,11 @@ public class KaiEditor {
 		} catch (Exception e) {
 			e.printStackTrace(System.err);
 		}
-		viewer.screener.needRedraw();
-		logoPanel.needRedraw();
-		kaiTimeLine.needRedraw("editor");
-		
+		if (notCtrlPressed) {
+			viewer.screener.needRedraw();
+			logoPanel.needRedraw();
+			kaiTimeLine.needRedraw("editor");
+		}
 	}
 	
 	public static void main(String[] args) {

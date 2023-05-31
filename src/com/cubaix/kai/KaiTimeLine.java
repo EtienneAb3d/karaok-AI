@@ -11,6 +11,9 @@ import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Listener;
+import org.eclipse.swt.widgets.Scale;
 
 import com.cubaix.kaiDJ.KaiDJ;
 import com.cubaix.kaiDJ.db.SongDescr;
@@ -32,7 +35,7 @@ public class KaiTimeLine extends TimedCanvas {
 	private Long TstartChunk = (long) -1;
 	private Long TendChunk = (long) -1;
 	
-	private Long Z;// ms/px
+	private final Long Z = (long) 20;// ms/px
 
 	private int currentKaiIdx = 0;
 	
@@ -50,7 +53,7 @@ public class KaiTimeLine extends TimedCanvas {
 	
 	private Rectangle maintimeStamp;
 	
-	//Some final values to paint the timeline
+	//Some final values to paint the time line
 	private final int scaleBarHeight = 40;
 	private final int chunkHeight = 66;
 	private final int firstLine = scaleBarHeight+chunkHeight;
@@ -59,14 +62,14 @@ public class KaiTimeLine extends TimedCanvas {
 	//Menu
 	private final Rectangle previousButton = new Rectangle(0,240-21,20,20); //240 height of the timeline
 	private final Rectangle nextButton = new Rectangle(21,240-21,20,20);
-	private final Rectangle musicButton = new Rectangle(42,240-21,20,20);
 	
 	private boolean previousButIsClicked = false;
 	private boolean nextButIsClicked = false;
-	private boolean musicButIsClicked = false;
 	
 	private final int[] previousTriangle = new int[] {4,240-11, 14,240-16, 14,240-6}; 
 	private final int[] nextTriangle = new int[] {21+14,240-11, 21+4,240-16, 21+4,240-6};
+	
+	private int indexToGo = -1;
 
 	public KaiTimeLine(KaiEditor parentKE, Composite parent, int style) {
 		super(parentKE.parentKDJ, parent, style);
@@ -82,45 +85,35 @@ public class KaiTimeLine extends TimedCanvas {
 		this.currentKaiIdx = song.kaiSrt.newGetChunkIdx(timeMS, timeEndMS);
 		needRedraw("recalculateZ");
 	}
-
-	public void calculateScaleFactor() {
+	
+	//Scale factor default Z = 20
+	public void calculateMainChunkBounds() {
 		song = parentKE.song;
 		//Checking for the first time if chunks are available (in case of an empty file at the start)
-		if(song.kaiSrt.chunks.size() == 0) currentKaiIdx = -1;
+		if(song.kaiSrt == null || song.kaiSrt.chunks.size() == 0) currentKaiIdx = -1;
 		
 		//Cheking if the song is available for karaok-ai
-		if(song.kaiSrt != null && currentKaiIdx != -1) {
+		if(currentKaiIdx != -1) {
 			Long duréeMoyenneChunk;
 			
 			TstartChunk = song.kaiSrt.chunks.get(currentKaiIdx).getStartTime();
 			TendChunk = song.kaiSrt.chunks.get(currentKaiIdx).getEndTime();
 			
 			duréeMoyenneChunk = (TendChunk-TstartChunk) / 2; //duration in ms
-			Z = (long) 0; // ms.pxl
 			
-			//calculating for an appropriate Z
-			do {
-				Z += 10;
-				
-				Talpha = (long) (timeLineBounds.width / 2);
-				
-				Tstart = (long) ((TstartChunk + duréeMoyenneChunk) - Talpha * Z); // ms
-				if(Tstart < 0) Tstart = (long) 0;
-				
-				xMainChunk  = (TstartChunk / Z)-(Tstart / Z);
-				widthMainChunk = ((TendChunk / Z)-(Tstart / Z)) - xMainChunk;
-				
-			} while (widthMainChunk > (timeLineBounds.width /3));
+			Talpha = (long) (timeLineBounds.width / 2);
+			
+			Tstart = (long) ((TstartChunk + duréeMoyenneChunk) - Talpha * Z); // ms
+			if(Tstart < 0) Tstart = (long) 0;
+			
+			xMainChunk  = (TstartChunk / Z)-(Tstart / Z);
+			widthMainChunk = ((TendChunk / Z)-(Tstart / Z)) - xMainChunk;
 			
 			maintimeStamp.x = xMainChunk.intValue();
 			maintimeStamp.width = widthMainChunk.intValue();
 			
 		} else {
 			Tstart = (long) 0;
-			
-			Z = (long) 100;
-			Tstart = (long) 0;
-			
 		}
 	}
 
@@ -130,7 +123,7 @@ public class KaiTimeLine extends TimedCanvas {
 			public void paintControl(PaintEvent aPE) {
 				
 				timeLineBounds = getClientArea();
-				calculateScaleFactor();
+				calculateMainChunkBounds();
 				
 				GC aPlGC = new GC(aThis);
 				paintDbl(aPlGC);
@@ -140,58 +133,11 @@ public class KaiTimeLine extends TimedCanvas {
 		});
 		addMouseListener(new MouseListener() {
 			/**
-			 * Applying changes when mouse is up and reseting booleans
+			 * This function is at the beginning of all time line interactions.
+			 * It mainly trigger a function to check if the click event coordinates are on an interactive element.
+			 * Save the current mouse position and redraw the time line.
 			 * @param arg0
 			 */
-			@Override
-			public void mouseUp(MouseEvent arg0) {	
-				if(previousButIsClicked || nextButIsClicked || musicButIsClicked) {
-					
-					menuEventhandler();
-					
-					previousButIsClicked = false;
-					nextButIsClicked = false;
-					musicButIsClicked = false;
-					
-					needRedraw();
-				}else if(mainChunkIsClicked || markOneIsClicked || markTwoIsClicked) {
-					aThis.setCursor(new Cursor(parentKDJ.display,SWT.CURSOR_ARROW));
-					
-					try {
-						editFile();
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
-					
-					mainChunkIsClicked = false;
-					markOneIsClicked = false;
-					markTwoIsClicked = false;
-					
-					needRedraw();
-					xCurrentMousePos = -1;
-				}
-			}
-			
-			private void menuEventhandler() {
-				if(previousButIsClicked) {
-					if (currentKaiIdx>0) {
-						currentKaiIdx--;
-						needRedraw("recalculateZ");
-					}
-					parentKE.editor.setSelection(song.kaiSrt.chunks.get(currentKaiIdx).editorTimestampLine[0], song.kaiSrt.chunks.get(currentKaiIdx).editorTimestampLine[1]);
-				
-				}else if (nextButIsClicked){//nextBut
-					if (currentKaiIdx<song.kaiSrt.chunks.size()-1) {
-						currentKaiIdx++;
-						needRedraw("recalculateZ");
-					}
-					parentKE.editor.setSelection(song.kaiSrt.chunks.get(currentKaiIdx).editorTimestampLine[0], song.kaiSrt.chunks.get(currentKaiIdx).editorTimestampLine[1]);
-					
-				}else if (musicButIsClicked && currentKaiIdx != -1){//musicBut
-					parentKE.seek(song.kaiSrt.chunks.get(currentKaiIdx).getStartTime());
-				}
-			}
-
 			@Override
 			public void mouseDown(MouseEvent arg0) {
 				if (song.kaiSrt != null && currentKaiIdx != -1 && isSomethingIsClicked(arg0)) {
@@ -201,7 +147,7 @@ public class KaiTimeLine extends TimedCanvas {
 			}
 			
 			/**
-			 * Looking if some dynamic content has been clicked and updating concerned boolean to make active the MouseEventListener
+			 * Looking if some dynamic content has been clicked and updating concerned boolean to activate MouseEventListener
 			 * 
 			 * @param MouseEvent arg0 
 			 * @return boolean
@@ -240,27 +186,145 @@ public class KaiTimeLine extends TimedCanvas {
 						arg0.y >= nextButton.y && arg0.y <= nextButton.y + nextButton.height) {
 					nextButIsClicked = true;
 					return true;
-				} else if (
-						//Menu music button:
-						arg0.x >= musicButton.x && arg0.x <= musicButton.x + musicButton.width && 
-						arg0.y >= musicButton.y && arg0.y <= musicButton.y + musicButton.height) {
-					musicButIsClicked = true;
-					return true;
 				} else {
 					return false;
 				}
 			}
 			
+			/**
+			 * This function is at the end of all time line interactions.
+			 * Applying changes when mouse is up and reseting booleans
+			 * @param arg0
+			 */
+			@Override
+			public void mouseUp(MouseEvent arg0) {	
+				if(previousButIsClicked || nextButIsClicked) {
+					
+					menuEventhandler();
+					
+					previousButIsClicked = false;
+					nextButIsClicked = false;
+					
+					needRedraw();
+				}else if(mainChunkIsClicked || markOneIsClicked || markTwoIsClicked) {
+					aThis.setCursor(new Cursor(parentKDJ.display,SWT.CURSOR_ARROW));
+					
+					try {
+						editFile();
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+					
+					mainChunkIsClicked = false;
+					markOneIsClicked = false;
+					markTwoIsClicked = false;
+					
+					needRedraw();
+					xCurrentMousePos = -1;
+				}
+			}
+			/**
+			 * Modifying text editor content before saving modification on file (happens when a chunk is modified in the time line)
+			 * @throws Exception
+			 */
+			protected void editFile() throws Exception {
+				String newLine = "";
+				if (mainChunkIsClicked) {
+					newLine = ChunkStr.getTimeMSToFormatTimestamp((Tstart/Z+maintimeStamp.x)*Z)+" --> "+ChunkStr.getTimeMSToFormatTimestamp((Tstart/Z+maintimeStamp.x+maintimeStamp.width)*Z);
+				}
+				if (markOneIsClicked) {
+					newLine = ChunkStr.getTimeMSToFormatTimestamp((Tstart/Z+maintimeStamp.x)*Z)+" --> "+ChunkStr.getTimeMSToFormatTimestamp(song.kaiSrt.chunks.get(currentKaiIdx).getEndTime());
+				}
+				if (markTwoIsClicked) {
+					newLine = ChunkStr.getTimeMSToFormatTimestamp(song.kaiSrt.chunks.get(currentKaiIdx).getStartTime())+" --> "+ChunkStr.getTimeMSToFormatTimestamp((Tstart/Z+maintimeStamp.x+maintimeStamp.width)*Z);
+				}
+				
+				parentKE.editor.setSelection(song.kaiSrt.chunks.get(currentKaiIdx).editorTimestampLine[0], song.kaiSrt.chunks.get(currentKaiIdx).editorTimestampLine[1]);
+				
+				if(newLine != "") parentKE.editor.insert(newLine);
+				
+				String aContent = parentKE.editor.getText().replaceAll("\r*\n","\n");
+				
+				parentKE.editorContentHistory.add(aContent);
+				int aVPos = parentKE.editor.getVerticalBar().getSelection();
+				int aHPos = parentKE.editor.getHorizontalBar().getSelection();
+				parentKE.editorHVPosHistory.add(new int[] {aVPos,aHPos});
+				
+				song.kaiSrt.srt = aContent;
+				song.kaiSrt.srt2Text();
+				song.kaiSrt.resyncText2Srt();
+				song.kaiSrt.save(song.path+".ksrt.edited");
+				song.kaiSrt.setLinesChunk(parentKE.editor.getText());
+			}
+			/**
+			 * updating chunk index to display and music players
+			 */
+			private void menuEventhandler() {
+				if(previousButIsClicked) {
+					if (currentKaiIdx>0) {
+						currentKaiIdx--;
+						if(parentKE.currentlySeeking) {
+							enterInQueue();
+						} else {
+							parentKE.seek(song.kaiSrt.chunks.get(currentKaiIdx).getStartTime());
+						}
+						needRedraw("recalculateZ");
+					}
+					parentKE.editor.setSelection(song.kaiSrt.chunks.get(currentKaiIdx).editorTimestampLine[0], song.kaiSrt.chunks.get(currentKaiIdx).editorTimestampLine[1]);
+				
+				}else if (nextButIsClicked){//nextBut
+					if (currentKaiIdx<song.kaiSrt.chunks.size()-1) {
+						currentKaiIdx++;
+						if(parentKE.currentlySeeking) {
+							enterInQueue();
+						} else {
+							parentKE.seek(song.kaiSrt.chunks.get(currentKaiIdx).getStartTime());
+						}
+						needRedraw("recalculateZ");
+					}
+					parentKE.editor.setSelection(song.kaiSrt.chunks.get(currentKaiIdx).editorTimestampLine[0], song.kaiSrt.chunks.get(currentKaiIdx).editorTimestampLine[1]);
+					
+				}
+			}
+			/**
+			 * This is done in case Threads players are currently seeking another time.
+			 * It save the index to go when the players will be available.
+			 */
+			private void enterInQueue() {
+				indexToGo = currentKaiIdx;
+			}
+			
 			@Override
 			public void mouseDoubleClick(MouseEvent arg0) {}
 		});
+		/**
+		 * This thread is listening indxToGo value and updating players time when players will be available (to avoid any desynchronisation).
+		 */
+		Thread aSeekTrackTh = new Thread(new Runnable() {
+			@Override
+			public void run() {
+				while(!aThis.isDisposed()) {
+					try {
+						if(indexToGo != -1 && !parentKE.currentlySeeking) {
+							System.out.println("seeking chunk : " + indexToGo);
+							parentKE.seek(song.kaiSrt.chunks.get(indexToGo).getStartTime());
+							indexToGo = -1;
+						}
+						Thread.sleep(5);
+					} catch (Exception e) {
+						e.printStackTrace(System.err);
+					}
+				}
+			}
+		});
+		aSeekTrackTh.start();
 		
 		/**
 		 * Listening mouse moves only when the chunk or handles are clicked
 		 * and manage new chunk position
 		 * 
 		 * Constraints :
-		 * 	- Chunk cannot be moved out of time line bounds
+		 * 	- Chunk cannot be moved out of the time line bounds
 		 *  - Starting time handle cannot be moved after the Ending time handle (and vice versa)
 		 */
 		addMouseMoveListener(new MouseMoveListener() {
@@ -302,34 +366,6 @@ public class KaiTimeLine extends TimedCanvas {
 				}
 			}
 		});
-	}
-	
-	/**
-	 * Modifying text editor content before saving modification on file (happens when a chunk is modified in the time line)
-	 * @throws Exception
-	 */
-	protected void editFile() throws Exception {
-		String newLine = "";
-		if (mainChunkIsClicked) {
-			newLine = ChunkStr.getTimeMSToFormatTimestamp((Tstart/Z+maintimeStamp.x)*Z)+" --> "+ChunkStr.getTimeMSToFormatTimestamp((Tstart/Z+maintimeStamp.x+maintimeStamp.width)*Z);
-		}
-		if (markOneIsClicked) {
-			newLine = ChunkStr.getTimeMSToFormatTimestamp((Tstart/Z+maintimeStamp.x)*Z)+" --> "+ChunkStr.getTimeMSToFormatTimestamp(song.kaiSrt.chunks.get(currentKaiIdx).getEndTime());
-		}
-		if (markTwoIsClicked) {
-			newLine = ChunkStr.getTimeMSToFormatTimestamp(song.kaiSrt.chunks.get(currentKaiIdx).getStartTime())+" --> "+ChunkStr.getTimeMSToFormatTimestamp((Tstart/Z+maintimeStamp.x+maintimeStamp.width)*Z);
-		}
-		parentKE.editor.clearSelection();
-		parentKE.editor.setSelection(song.kaiSrt.chunks.get(currentKaiIdx).editorTimestampLine[0], song.kaiSrt.chunks.get(currentKaiIdx).editorTimestampLine[1]);
-		
-		if(newLine != "") parentKE.editor.insert(newLine);
-		parentKE.editor.clearSelection();
-		
-		song.kaiSrt.srt = parentKE.editor.getText().replaceAll("\r*\n","\n");
-		song.kaiSrt.srt2Text();
-		song.kaiSrt.resyncText2Srt();
-		song.kaiSrt.save(song.path+".ksrt.edited");
-		song.kaiSrt.setLinesChunk(parentKE.editor.getText());
 	}
 
 	@Override
@@ -452,9 +488,6 @@ public class KaiTimeLine extends TimedCanvas {
 				dblBufGC.fillRectangle(nextButton);
 				dblBufGC.drawPolygon(nextTriangle);
 				
-				dblBufGC.setBackground(parentKDJ.whiteC);
-				dblBufGC.fillRectangle(musicButton);
-				
 			}
 			
 			// Draw final image
@@ -487,17 +520,18 @@ public class KaiTimeLine extends TimedCanvas {
 		// redrawing after key press event on the text editor
 		case "editor":
 			checkForCurrentChunkIndex();
-			calculateScaleFactor();
-			super.needRedraw();
 			break;
 		// recalculating scale factor before redrawing
 		case "recalculateZ":
-			calculateScaleFactor();
-			super.needRedraw();
+			break;
+		case "init":
+			currentKaiIdx = 0;
 			break;
 		default:
 			throw new IllegalArgumentException("Unexpected value: " + event);
 		}
+		calculateMainChunkBounds();
+		super.needRedraw();
 	}
 	
 	/**
