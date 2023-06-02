@@ -35,7 +35,7 @@ public class KaiTimeLine extends TimedCanvas {
 	private Long TstartChunk = (long) -1;
 	private Long TendChunk = (long) -1;
 	
-	private final Long Z = (long) 20;// ms/px
+	private Long Z;// ms/px
 
 	private int currentKaiIdx = 0;
 	
@@ -60,22 +60,30 @@ public class KaiTimeLine extends TimedCanvas {
 	private final int secondLine = scaleBarHeight+ chunkHeight*2;
 	
 	//Menu
-	private final Rectangle previousButton = new Rectangle(0,240-21,20,20); //240 height of the timeline
-	private final Rectangle nextButton = new Rectangle(21,240-21,20,20);
+	private final Rectangle previousButton = new Rectangle(0,240-31,30,30); //240 height of the timeline
+	private final Rectangle nextButton = new Rectangle(31,240-31,30,30);
+	private final Rectangle minusScaleFactorButton = new Rectangle(62,240-31,30,30);
+	private final Rectangle plusScaleFactorButton = new Rectangle(164,240-31,30,30);
 	
 	private boolean previousButIsClicked = false;
 	private boolean nextButIsClicked = false;
+	private boolean plusButIsClicked = false;
+	private boolean minusButIsClicked = false;
 	
-	private final int[] previousTriangle = new int[] {4,240-11, 14,240-16, 14,240-6}; 
-	private final int[] nextTriangle = new int[] {21+14,240-11, 21+4,240-16, 21+4,240-6};
+	private final int[] previousTriangle = new int[] {6,240-15, 22,240-25, 22,240-5};
+	private final int[] nextTriangle = new int[] {31+30-8,240-15, 31+7,240-25, 31+7,240-5};
 	
 	private int indexToGo = -1;
+	
+	private final int MAX_SCALE_FACTOR = 60;
+	private final int MIN_SCALE_FACTOR = 10;
+	private final int INCREMENT_SCALE_FACTOR = 10;
 
 	public KaiTimeLine(KaiEditor parentKE, Composite parent, int style) {
 		super(parentKE.parentKDJ, parent, style);
 		this.parentKE = parentKE;
 		refreshRate = 50;
-		
+		Z = (long) 20;
 		maintimeStamp = new Rectangle(0, firstLine, 0, chunkHeight);
 		
 		createListeners();
@@ -186,6 +194,18 @@ public class KaiTimeLine extends TimedCanvas {
 						arg0.y >= nextButton.y && arg0.y <= nextButton.y + nextButton.height) {
 					nextButIsClicked = true;
 					return true;
+				} else if (
+						//Menu plus button:
+						arg0.x >= plusScaleFactorButton.x && arg0.x <= plusScaleFactorButton.x + plusScaleFactorButton.width && 
+						arg0.y >= plusScaleFactorButton.y && arg0.y <= plusScaleFactorButton.y + plusScaleFactorButton.height) {
+					plusButIsClicked = true;
+					return true;
+				} else if (
+						//Menu minus button:
+						arg0.x >= minusScaleFactorButton.x && arg0.x <= minusScaleFactorButton.x + minusScaleFactorButton.width && 
+						arg0.y >= minusScaleFactorButton.y && arg0.y <= minusScaleFactorButton.y + minusScaleFactorButton.height) {
+					minusButIsClicked = true;
+					return true;
 				} else {
 					return false;
 				}
@@ -198,12 +218,9 @@ public class KaiTimeLine extends TimedCanvas {
 			 */
 			@Override
 			public void mouseUp(MouseEvent arg0) {	
-				if(previousButIsClicked || nextButIsClicked) {
+				if(previousButIsClicked || nextButIsClicked || plusButIsClicked || minusButIsClicked) {
 					
 					menuEventhandler();
-					
-					previousButIsClicked = false;
-					nextButIsClicked = false;
 					
 					needRedraw();
 				}else if(mainChunkIsClicked || markOneIsClicked || markTwoIsClicked) {
@@ -271,7 +288,7 @@ public class KaiTimeLine extends TimedCanvas {
 						needRedraw("recalculateZ");
 					}
 					parentKE.editor.setSelection(song.kaiSrt.chunks.get(currentKaiIdx).editorTimestampLine[0], song.kaiSrt.chunks.get(currentKaiIdx).editorTimestampLine[1]);
-				
+					previousButIsClicked = false;
 				}else if (nextButIsClicked){//nextBut
 					if (currentKaiIdx<song.kaiSrt.chunks.size()-1) {
 						currentKaiIdx++;
@@ -283,7 +300,13 @@ public class KaiTimeLine extends TimedCanvas {
 						needRedraw("recalculateZ");
 					}
 					parentKE.editor.setSelection(song.kaiSrt.chunks.get(currentKaiIdx).editorTimestampLine[0], song.kaiSrt.chunks.get(currentKaiIdx).editorTimestampLine[1]);
-					
+					nextButIsClicked = false;
+				} else if (plusButIsClicked) {
+					increaseZ();
+					plusButIsClicked = false;
+				} else if (minusButIsClicked) {
+					decreaseZ();
+					minusButIsClicked = false;
 				}
 			}
 			/**
@@ -482,11 +505,28 @@ public class KaiTimeLine extends TimedCanvas {
 				dblBufGC.setForeground(parentKDJ.secondBckC);
 				dblBufGC.setBackground(parentKDJ.grayC);
 				//next and previous buttons
-				
 				dblBufGC.fillRectangle(previousButton);
-				dblBufGC.drawPolygon(previousTriangle);
+				//dblBufGC.drawPolygon(previousTriangle);
 				dblBufGC.fillRectangle(nextButton);
-				dblBufGC.drawPolygon(nextTriangle);
+				//dblBufGC.drawPolygon(nextTriangle);
+				
+				//Drawing scale factor buttons
+				dblBufGC.fillRectangle(minusScaleFactorButton);
+				dblBufGC.fillRectangle(plusScaleFactorButton);
+				// + and -
+				dblBufGC.setBackground(parentKDJ.mainBckC);
+				dblBufGC.fillRectangle(62+5,240-18,20,5);
+				dblBufGC.fillRectangle(plusScaleFactorButton.x+5,240-18,20,5);
+				dblBufGC.fillRectangle(plusScaleFactorButton.x+12,plusScaleFactorButton.y+5,5,20);
+				
+				dblBufGC.fillPolygon(nextTriangle);
+				dblBufGC.fillPolygon(previousTriangle);
+				
+				//writing scale factor info
+				dblBufGC.setClipping(93,209,70,30);
+				dblBufGC.setBackground(parentKDJ.logoLightC);
+				dblBufGC.drawText("Scale Factor :", 93, 208);
+				dblBufGC.drawText(getZ()+" ms / px", 100, 223);
 				
 			}
 			
@@ -548,6 +588,29 @@ public class KaiTimeLine extends TimedCanvas {
 			currentKaiIdx = -1;
 			
 		}
+	}
+	
+	/**
+	 * Scale factor section
+	 */
+
+	public Long getZ() {
+		return Z;
+	}
+
+	public void setZ(Long z) {
+		Z = z;
+		needRedraw("recalculateZ");
+	}
+	
+	private void increaseZ() {
+		long z = getZ();
+		if (z < MAX_SCALE_FACTOR) setZ(z+=INCREMENT_SCALE_FACTOR);
+	}
+	
+	private void decreaseZ() {
+		long z = getZ();
+		if (z > MIN_SCALE_FACTOR) setZ(z-=INCREMENT_SCALE_FACTOR);
 	}
 }
 
