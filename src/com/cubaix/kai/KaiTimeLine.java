@@ -386,6 +386,32 @@ public class KaiTimeLine extends TimedCanvas {
 				}
 			}
 		});
+		
+		//Dynamic time line 
+//		Thread aTrackTh = new Thread(new Runnable() {
+//			@Override
+//			public void run() {
+//				while(!aThis.isDisposed()) {
+//					try {
+//						SongDescr aSong = parentKV.parentKE.song;
+//						if(aSong != null && aSong.kaiSrt != null) {
+//							int aKaiIdx = aSong.kaiSrt.getChunkIdx(parentKV.parentKE.playerVocals.getPositionMs());
+//							int aJustBef = aSong.kaiSrt.getChunkIdxJustBefore(parentKV.parentKE.playerVocals.getPositionMs());
+//							if(aKaiIdx != currentKaiIdx || aJustBef != currentKaiIdxJustBefore) {
+//								currentKaiIdx = aKaiIdx;
+//								currentKaiIdxJustBefore = aJustBef;
+//								needRedraw();
+//								parentKV.parentKE.logoPanel.needRedraw();
+//							}
+//						}
+//						Thread.sleep(10);
+//					} catch (Exception e) {
+//						e.printStackTrace(System.err);
+//					}
+//				}
+//			}
+//		});
+//		aTrackTh.start();
 	}
 
 	@Override
@@ -453,11 +479,17 @@ public class KaiTimeLine extends TimedCanvas {
 					int i = currentKaiIdx-1;
 					int xChunkBefore = (int) ((song.kaiSrt.chunks.get(i).getStartTime() / Z)-(Tstart / Z));
 					int widthChunkBefore = (int) ((song.kaiSrt.chunks.get(i).getEndTime() / Z)-(Tstart / Z)) - xChunkBefore;
-					
 					Rectangle chunkBefore = new Rectangle(xChunkBefore, scaleBarHeight , widthChunkBefore, chunkHeight);
+					
 					dblBufGC.setClipping(chunkBefore);
 					dblBufGC.fillRectangle(chunkBefore);
-					dblBufGC.drawText(song.kaiSrt.chunks.get(i).getText(), chunkBefore.x+1, chunkBefore.y);
+					
+					if(chunkBefore.x < -20) {
+						dblBufGC.drawText(song.kaiSrt.chunks.get(i).getText(), -20, chunkBefore.y);
+					} else {
+						dblBufGC.drawText(song.kaiSrt.chunks.get(i).getText(), chunkBefore.x+1, chunkBefore.y);
+					}
+					
 				}
 				
 				//Checking to draw the chunk after
@@ -485,7 +517,11 @@ public class KaiTimeLine extends TimedCanvas {
 				dblBufGC.setForeground(parentKDJ.whiteC);
 				dblBufGC.setClipping(maintimeStamp);
 				dblBufGC.fillRectangle(maintimeStamp);
-				dblBufGC.drawText(song.kaiSrt.chunks.get(currentKaiIdx).getText(), maintimeStamp.x+1, maintimeStamp.y);
+				if(maintimeStamp.x < -10) {
+					dblBufGC.drawText(song.kaiSrt.chunks.get(currentKaiIdx).getText(), -10, maintimeStamp.y);
+				} else {
+					dblBufGC.drawText(song.kaiSrt.chunks.get(currentKaiIdx).getText(), maintimeStamp.x+1, maintimeStamp.y);
+				}
 				
 				//Drawing red limits
 				dblBufGC.setClipping(timeLineBounds);
