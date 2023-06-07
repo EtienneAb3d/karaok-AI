@@ -1,12 +1,18 @@
 package com.cubaix.kai;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
+import java.util.Properties;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.KeyListener;
 import org.eclipse.swt.events.PaintEvent;
 import org.eclipse.swt.events.PaintListener;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
@@ -29,6 +35,11 @@ public class KaiScreener extends TimedCanvas {
 
 	int currentKaiIdx = -1;
 	int currentKaiIdxJustBefore = -1;
+	
+	//Settings attributes
+	Color backgroundColor;
+	Color focusedTextColor;
+	Color sidedTextColor;
 
 	public KaiScreener(KaiViewer aParentKV, Composite parent, int style) {
 		super(aParentKV.parentKE.parentKDJ, parent, style);
@@ -95,7 +106,8 @@ public class KaiScreener extends TimedCanvas {
 			}
 
 			dblBufGC.setClipping(0, 0,dblBounds.width,dblBounds.height);
-			dblBufGC.setBackground(parentKDJ.mainBckC);
+			
+			dblBufGC.setBackground(backgroundColor);
 			dblBufGC.fillRectangle(0, 0,dblBounds.width,dblBounds.height);
 			
 			SongDescr aSong = parentKV.parentKE.song;
@@ -103,6 +115,7 @@ public class KaiScreener extends TimedCanvas {
 				currentKaiIdx = aSong.kaiSrt.getChunkIdx(parentKV.parentKE.playerVocals.getPositionMs());
 				int aJustBef = aSong.kaiSrt.getChunkIdxJustBefore(parentKV.parentKE.playerVocals.getPositionMs());
 
+				//Settings notes - Screener FONT style
 				dblBufGC.setFont(parentKDJ.viewerFont);
 				int aPadding = 5;
 
@@ -136,12 +149,13 @@ public class KaiScreener extends TimedCanvas {
 //						dblBufGC.setForeground(parentKDJ.logoLightC);
 //						dblBufGC.drawLine(dblBounds.x, aPosY, dblBounds.x+dblBounds.width, aPosY);
 //					}
+					
 					String aKaiText = aSong.kaiSrt.chunks.elementAt(i).getText();
 					if(i == currentKaiIdx) {
-						dblBufGC.setForeground(parentKDJ.logoLightC);
+						dblBufGC.setForeground(focusedTextColor);
 					}
 					else {
-						dblBufGC.setForeground(parentKDJ.logoDarkC);
+						dblBufGC.setForeground(sidedTextColor);
 					}
 					for(String aT : aKaiText.split("\n")) {
 						aT = aT.trim();
@@ -178,6 +192,40 @@ public class KaiScreener extends TimedCanvas {
 		aPlGC.drawImage(dblBuf
 				,0, 0, dblBounds.width, dblBounds.height
 				, 0, 0,panelBounds.width,panelBounds.height);
+	}
+	
+	/**
+	 * Load and apply settings from the configuration file associated to the song currently played in karaok-ai
+	 * @exception FileNotFoundException : It create and recall this function to finally apply a default configuration file
+	 */
+	public void loadSettingsFromFile() {
+		try {
+			InputStream input = new FileInputStream(parentKV.parentKE.song.path+".kaiConfig");
+			Properties prop = new Properties();
+			try {
+				prop.load(input);
+				backgroundColor = ScreenerSettingsFilesTools.stringToColor(prop.getProperty("backGroundColor"));
+				focusedTextColor = ScreenerSettingsFilesTools.stringToColor(prop.getProperty("mainTextColor"));
+				sidedTextColor = ScreenerSettingsFilesTools.stringToColor(prop.getProperty("SecondaryTextColor"));
+				needRedraw();
+				
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		} catch (FileNotFoundException e) {
+			Properties defaultProps = new Properties();
+			defaultProps.setProperty("backGroundColor", ScreenerSettingsFilesTools.colorToSettingsString(parentKDJ.mainBckC));
+			defaultProps.setProperty("mainTextColor", ScreenerSettingsFilesTools.colorToSettingsString(parentKDJ.logoLightC));
+			defaultProps.setProperty("SecondaryTextColor", ScreenerSettingsFilesTools.colorToSettingsString(parentKDJ.logoDarkC));
+			try {
+				defaultProps.store(new FileOutputStream(parentKV.parentKE.song.path+".kaiConfig"), null);
+				loadSettingsFromFile();
+				
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+		}
 	}
 
 }

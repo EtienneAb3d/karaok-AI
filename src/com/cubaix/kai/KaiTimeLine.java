@@ -11,9 +11,6 @@ import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Event;
-import org.eclipse.swt.widgets.Listener;
-import org.eclipse.swt.widgets.Scale;
 
 import com.cubaix.kaiDJ.KaiDJ;
 import com.cubaix.kaiDJ.db.SongDescr;

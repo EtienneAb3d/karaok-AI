@@ -1,8 +1,10 @@
 package com.cubaix.kai;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.util.Arrays;
 import java.util.Vector;
+import java.util.Properties;
 
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Line;
@@ -31,6 +33,8 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Menu;
+import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 
@@ -964,6 +968,16 @@ public class KaiEditor {
 								new File(song.path+".ksrt.edited").renameTo(
 										new File(song.path+".ksrt.edited."+System.currentTimeMillis()));
 							}
+							
+							//Creating karaok-AI settings file
+							if(!new File(song.path+".kaiConfig").exists()) {
+								Properties defaultProps = new Properties();
+								defaultProps.setProperty("backGroundColor", ScreenerSettingsFilesTools.colorToSettingsString(parentKDJ.mainBckC));
+								defaultProps.setProperty("mainTextColor", ScreenerSettingsFilesTools.colorToSettingsString(parentKDJ.logoLightC));
+								defaultProps.setProperty("SecondaryTextColor", ScreenerSettingsFilesTools.colorToSettingsString(parentKDJ.logoDarkC));
+								defaultProps.store(new FileOutputStream(song.path+".kaiConfig"), null);
+							}
+							
 							song = new SongDescr(song);
 							load(song);
 							break;
@@ -1020,6 +1034,7 @@ public class KaiEditor {
 			playerDrums.load(song,song.path+".drums","DRUMS");
 			playerBass.load(song,song.path+".bass","BASS");
 			playerOther.load(song,song.path+".other","OTHER");
+			viewer.screener.loadSettingsFromFile();
 	
 			//Start/Stop for a fully initialized state
 			togglePlay();
