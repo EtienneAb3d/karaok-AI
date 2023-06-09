@@ -18,21 +18,31 @@ import com.cubaix.kaiDJ.swt.TimedCanvas;
 
 
 public class KaiTimeLine extends TimedCanvas {
+	
+	//Some final values to paint the time line
+	private static final int SCALE_BAR_HEIGHT = 40;
+	private static final int CHUNK_HEIGHT = 66;
+	private static final int FIRST_LINE = SCALE_BAR_HEIGHT+CHUNK_HEIGHT;
+	private static final int SECOND_LINE = SCALE_BAR_HEIGHT+ CHUNK_HEIGHT*2;
+	
+	private static final int MAX_SCALE_FACTOR = 60;
+	private static final int MIN_SCALE_FACTOR = 10;
+	private static final int INCREMENT_SCALE_FACTOR = 10;
 
 	private KaiEditor parentKE = null;
 
 	private Image dblBuf = null;
 	private GC dblBufGC;
 	
-	private Long Talpha;
+	private Long tAlpha;
 	
 	//ScaleBar Time in ms
-	private Long Tstart = (long) -1;
+	private Long tStart = (long) -1;
 	
-	private Long TstartChunk = (long) -1;
-	private Long TendChunk = (long) -1;
+	private Long tStartChunk = (long) -1;
+	private Long tEndChunk = (long) -1;
 	
-	private Long Z;// ms/px
+	private Long scaleFactor;// ms/px
 
 	private int currentKaiIdx = 0;
 	
@@ -48,16 +58,10 @@ public class KaiTimeLine extends TimedCanvas {
 	private boolean markOneIsClicked = false;
 	private boolean markTwoIsClicked = false;
 	
-	private Rectangle maintimeStamp;
-	
-	//Some final values to paint the time line
-	private final int scaleBarHeight = 40;
-	private final int chunkHeight = 66;
-	private final int firstLine = scaleBarHeight+chunkHeight;
-	private final int secondLine = scaleBarHeight+ chunkHeight*2;
+	private Rectangle mainTimestamp;
 	
 	//Menu
-	private final Rectangle previousButton = new Rectangle(0,240-31,30,30); //240 height of the timeline
+	private final Rectangle previousButton = new Rectangle(0,240-31,30,30); //240 time line height
 	private final Rectangle nextButton = new Rectangle(31,240-31,30,30);
 	private final Rectangle minusScaleFactorButton = new Rectangle(62,240-31,30,30);
 	private final Rectangle plusScaleFactorButton = new Rectangle(164,240-31,30,30);
@@ -70,28 +74,30 @@ public class KaiTimeLine extends TimedCanvas {
 	private final int[] previousTriangle = new int[] {6,240-15, 22,240-25, 22,240-5};
 	private final int[] nextTriangle = new int[] {31+30-8,240-15, 31+7,240-25, 31+7,240-5};
 	
-	private int indexToGo = -1;
+	private int[] currentPlayTimeTriangle;
+	Long aPlayerCurrentPosMS;
 	
-	private final int MAX_SCALE_FACTOR = 60;
-	private final int MIN_SCALE_FACTOR = 10;
-	private final int INCREMENT_SCALE_FACTOR = 10;
+	private int indexToGo = -1;
 
 	public KaiTimeLine(KaiEditor parentKE, Composite parent, int style) {
 		super(parentKE.parentKDJ, parent, style);
 		this.parentKE = parentKE;
+		
 		refreshRate = 50;
-		Z = (long) 20;
-		maintimeStamp = new Rectangle(0, firstLine, 0, chunkHeight);
+		scaleFactor = (long) 20;
+		mainTimestamp = new Rectangle(0, FIRST_LINE, 0, CHUNK_HEIGHT);
+		currentPlayTimeTriangle = new int[] {0,SCALE_BAR_HEIGHT-2 , -5,SCALE_BAR_HEIGHT-12, 5,SCALE_BAR_HEIGHT-12};
+		aPlayerCurrentPosMS = parentKE.playerVocals.getPositionMs();
 		
 		createListeners();
 	}
 	
 	public void timestampClickHandler(Long timeMS, Long timeEndMS) {
 		this.currentKaiIdx = song.kaiSrt.newGetChunkIdx(timeMS, timeEndMS);
-		needRedraw("recalculateZ");
+		needRedraw(2);
 	}
 	
-	//Scale factor default Z = 20
+	//default Scale factor is 20
 	public void calculateMainChunkBounds() {
 		song = parentKE.song;
 		//Checking for the first time if chunks are available (in case of an empty file at the start)
@@ -99,26 +105,29 @@ public class KaiTimeLine extends TimedCanvas {
 		
 		//Cheking if the song is available for karaok-ai
 		if(currentKaiIdx != -1) {
-			Long duréeMoyenneChunk;
+			Long aAverageChunkDuration;
 			
-			TstartChunk = song.kaiSrt.chunks.get(currentKaiIdx).getStartTime();
-			TendChunk = song.kaiSrt.chunks.get(currentKaiIdx).getEndTime();
+			tStartChunk = song.kaiSrt.chunks.get(currentKaiIdx).getStartTime();
+			tEndChunk = song.kaiSrt.chunks.get(currentKaiIdx).getEndTime();
 			
-			duréeMoyenneChunk = (TendChunk-TstartChunk) / 2; //duration in ms
+			aAverageChunkDuration = (tEndChunk-tStartChunk) / 2; //duration in ms
 			
-			Talpha = (long) (timeLineBounds.width / 2);
+			tAlpha = (long) (timeLineBounds.width / 2);
 			
-			Tstart = (long) ((TstartChunk + duréeMoyenneChunk) - Talpha * Z); // ms
-			if(Tstart < 0) Tstart = (long) 0;
+			tStart = (long) ((tStartChunk + aAverageChunkDuration) - tAlpha * scaleFactor); // ms
+			if(tStart < 0) tStart = (long) 0;
 			
-			xMainChunk  = (TstartChunk / Z)-(Tstart / Z);
-			widthMainChunk = ((TendChunk / Z)-(Tstart / Z)) - xMainChunk;
+			xMainChunk  = (tStartChunk / scaleFactor)-(tStart / scaleFactor);
+			widthMainChunk = ((tEndChunk / scaleFactor)-(tStart / scaleFactor)) - xMainChunk;
 			
-			maintimeStamp.x = xMainChunk.intValue();
-			maintimeStamp.width = widthMainChunk.intValue();
+			mainTimestamp.x = xMainChunk.intValue();
+			mainTimestamp.width = widthMainChunk.intValue();
+			
+			int aPlayerCurrentPosPxl = (int) ((aPlayerCurrentPosMS / scaleFactor)-(tStart / scaleFactor));
+			currentPlayTimeTriangle = new int[] {aPlayerCurrentPosPxl,SCALE_BAR_HEIGHT-2 , aPlayerCurrentPosPxl-5,SCALE_BAR_HEIGHT-12, aPlayerCurrentPosPxl+5,SCALE_BAR_HEIGHT-12};
 			
 		} else {
-			Tstart = (long) 0;
+			tStart = (long) 0;
 		}
 	}
 
@@ -141,12 +150,12 @@ public class KaiTimeLine extends TimedCanvas {
 			 * This function is at the beginning of all time line interactions.
 			 * It mainly trigger a function to check if the click event coordinates are on an interactive element.
 			 * Save the current mouse position and redraw the time line.
-			 * @param arg0
+			 * @param aME
 			 */
 			@Override
-			public void mouseDown(MouseEvent arg0) {
-				if (song.kaiSrt != null && currentKaiIdx != -1 && isSomethingIsClicked(arg0)) {
-					xCurrentMousePos = arg0.x;
+			public void mouseDown(MouseEvent aME) {
+				if (song.kaiSrt != null && currentKaiIdx != -1 && isSomethingIsClicked(aME)) {
+					xCurrentMousePos = aME.x;
 					needRedraw();
 				}
 			}
@@ -154,53 +163,53 @@ public class KaiTimeLine extends TimedCanvas {
 			/**
 			 * Looking if some dynamic content has been clicked and updating concerned boolean to activate MouseEventListener
 			 * 
-			 * @param MouseEvent arg0 
+			 * @param MouseEvent aME 
 			 * @return boolean
 			 */
-			private boolean isSomethingIsClicked(MouseEvent arg0) {
+			private boolean isSomethingIsClicked(MouseEvent aME) {
 				if (
 				//Main Chunk
-				arg0.x >= maintimeStamp.x && arg0.x <= maintimeStamp.x + maintimeStamp.width && 
-				arg0.y >= firstLine && arg0.y <= secondLine) {
+				aME.x >= mainTimestamp.x && aME.x <= mainTimestamp.x + mainTimestamp.width && 
+				aME.y >= FIRST_LINE && aME.y <= SECOND_LINE) {
 					aThis.setCursor(new Cursor(parentKDJ.display,SWT.CURSOR_SIZEALL));
 					mainChunkIsClicked = true;
 					return true;
 				} else if (
 						//Ending time handle
-						arg0.x >= maintimeStamp.x+maintimeStamp.width && arg0.x <= maintimeStamp.x + maintimeStamp.width + 6 && 
-						arg0.y >= firstLine+16 && arg0.y <= firstLine+16+34) {
+						aME.x >= mainTimestamp.x+mainTimestamp.width && aME.x <= mainTimestamp.x + mainTimestamp.width + 6 && 
+						aME.y >= FIRST_LINE+16 && aME.y <= FIRST_LINE+16+34) {
 					aThis.setCursor(new Cursor(parentKDJ.display,SWT.CURSOR_SIZEE));
 					markTwoIsClicked = true;
 					return true;
 				} else if (
 						//Starting time handle
-						arg0.x >= maintimeStamp.x-6 && arg0.x <= maintimeStamp.x && 
-						arg0.y >= firstLine+16 && arg0.y <= firstLine+16+34) {
+						aME.x >= mainTimestamp.x-6 && aME.x <= mainTimestamp.x && 
+						aME.y >= FIRST_LINE+16 && aME.y <= FIRST_LINE+16+34) {
 					aThis.setCursor(new Cursor(parentKDJ.display,SWT.CURSOR_SIZEE));
 					markOneIsClicked = true;
 					return true;
 				} else if (
 						//Menu previous button
-						arg0.x >= previousButton.x && arg0.x <= previousButton.x + previousButton.width && 
-						arg0.y >= previousButton.y && arg0.y <= previousButton.y + previousButton.height) {
+						aME.x >= previousButton.x && aME.x <= previousButton.x + previousButton.width && 
+						aME.y >= previousButton.y && aME.y <= previousButton.y + previousButton.height) {
 					previousButIsClicked = true;
 					return true;
 				} else if (
 						//Menu next button:
-						arg0.x >= nextButton.x && arg0.x <= nextButton.x + nextButton.width && 
-						arg0.y >= nextButton.y && arg0.y <= nextButton.y + nextButton.height) {
+						aME.x >= nextButton.x && aME.x <= nextButton.x + nextButton.width && 
+						aME.y >= nextButton.y && aME.y <= nextButton.y + nextButton.height) {
 					nextButIsClicked = true;
 					return true;
 				} else if (
 						//Menu plus button:
-						arg0.x >= plusScaleFactorButton.x && arg0.x <= plusScaleFactorButton.x + plusScaleFactorButton.width && 
-						arg0.y >= plusScaleFactorButton.y && arg0.y <= plusScaleFactorButton.y + plusScaleFactorButton.height) {
+						aME.x >= plusScaleFactorButton.x && aME.x <= plusScaleFactorButton.x + plusScaleFactorButton.width && 
+						aME.y >= plusScaleFactorButton.y && aME.y <= plusScaleFactorButton.y + plusScaleFactorButton.height) {
 					plusButIsClicked = true;
 					return true;
 				} else if (
 						//Menu minus button:
-						arg0.x >= minusScaleFactorButton.x && arg0.x <= minusScaleFactorButton.x + minusScaleFactorButton.width && 
-						arg0.y >= minusScaleFactorButton.y && arg0.y <= minusScaleFactorButton.y + minusScaleFactorButton.height) {
+						aME.x >= minusScaleFactorButton.x && aME.x <= minusScaleFactorButton.x + minusScaleFactorButton.width && 
+						aME.y >= minusScaleFactorButton.y && aME.y <= minusScaleFactorButton.y + minusScaleFactorButton.height) {
 					minusButIsClicked = true;
 					return true;
 				} else {
@@ -211,10 +220,10 @@ public class KaiTimeLine extends TimedCanvas {
 			/**
 			 * This function is at the end of all time line interactions.
 			 * Applying changes when mouse is up and reseting booleans
-			 * @param arg0
+			 * @param aME
 			 */
 			@Override
-			public void mouseUp(MouseEvent arg0) {	
+			public void mouseUp(MouseEvent aME) {	
 				if(previousButIsClicked || nextButIsClicked || plusButIsClicked || minusButIsClicked) {
 					
 					menuEventhandler();
@@ -244,13 +253,13 @@ public class KaiTimeLine extends TimedCanvas {
 			protected void editFile() throws Exception {
 				String newLine = "";
 				if (mainChunkIsClicked) {
-					newLine = ChunkStr.getTimeMSToFormatTimestamp((Tstart/Z+maintimeStamp.x)*Z)+" --> "+ChunkStr.getTimeMSToFormatTimestamp((Tstart/Z+maintimeStamp.x+maintimeStamp.width)*Z);
+					newLine = ChunkStr.getTimeMSToFormatTimestamp((tStart/scaleFactor+mainTimestamp.x)*scaleFactor)+" --> "+ChunkStr.getTimeMSToFormatTimestamp((tStart/scaleFactor+mainTimestamp.x+mainTimestamp.width)*scaleFactor);
 				}
 				if (markOneIsClicked) {
-					newLine = ChunkStr.getTimeMSToFormatTimestamp((Tstart/Z+maintimeStamp.x)*Z)+" --> "+ChunkStr.getTimeMSToFormatTimestamp(song.kaiSrt.chunks.get(currentKaiIdx).getEndTime());
+					newLine = ChunkStr.getTimeMSToFormatTimestamp((tStart/scaleFactor+mainTimestamp.x)*scaleFactor)+" --> "+ChunkStr.getTimeMSToFormatTimestamp(song.kaiSrt.chunks.get(currentKaiIdx).getEndTime());
 				}
 				if (markTwoIsClicked) {
-					newLine = ChunkStr.getTimeMSToFormatTimestamp(song.kaiSrt.chunks.get(currentKaiIdx).getStartTime())+" --> "+ChunkStr.getTimeMSToFormatTimestamp((Tstart/Z+maintimeStamp.x+maintimeStamp.width)*Z);
+					newLine = ChunkStr.getTimeMSToFormatTimestamp(song.kaiSrt.chunks.get(currentKaiIdx).getStartTime())+" --> "+ChunkStr.getTimeMSToFormatTimestamp((tStart/scaleFactor+mainTimestamp.x+mainTimestamp.width)*scaleFactor);
 				}
 				
 				parentKE.editor.setSelection(song.kaiSrt.chunks.get(currentKaiIdx).editorTimestampLine[0], song.kaiSrt.chunks.get(currentKaiIdx).editorTimestampLine[1]);
@@ -282,7 +291,7 @@ public class KaiTimeLine extends TimedCanvas {
 						} else {
 							parentKE.seek(song.kaiSrt.chunks.get(currentKaiIdx).getStartTime());
 						}
-						needRedraw("recalculateZ");
+						needRedraw(2);
 					}
 					parentKE.editor.setSelection(song.kaiSrt.chunks.get(currentKaiIdx).editorTimestampLine[0], song.kaiSrt.chunks.get(currentKaiIdx).editorTimestampLine[1]);
 					previousButIsClicked = false;
@@ -294,7 +303,7 @@ public class KaiTimeLine extends TimedCanvas {
 						} else {
 							parentKE.seek(song.kaiSrt.chunks.get(currentKaiIdx).getStartTime());
 						}
-						needRedraw("recalculateZ");
+						needRedraw(2);
 					}
 					parentKE.editor.setSelection(song.kaiSrt.chunks.get(currentKaiIdx).editorTimestampLine[0], song.kaiSrt.chunks.get(currentKaiIdx).editorTimestampLine[1]);
 					nextButIsClicked = false;
@@ -315,7 +324,7 @@ public class KaiTimeLine extends TimedCanvas {
 			}
 			
 			@Override
-			public void mouseDoubleClick(MouseEvent arg0) {}
+			public void mouseDoubleClick(MouseEvent aME) {}
 		});
 		/**
 		 * This thread is listening indxToGo value and updating players time when players will be available (to avoid any desynchronisation).
@@ -352,66 +361,62 @@ public class KaiTimeLine extends TimedCanvas {
 			private int newSize;
 			
 			@Override
-			public void mouseMove(MouseEvent arg0) {
+			public void mouseMove(MouseEvent aME) {
 				if(mainChunkIsClicked) {
-					newPos = maintimeStamp.x + arg0.x-xCurrentMousePos;
+					newPos = mainTimestamp.x + aME.x-xCurrentMousePos;
 					//restricting position to fit into windows limits
-					maintimeStamp.x = (newPos < 0) ? 
-							0 : (newPos + maintimeStamp.width > timeLineBounds.width-1) ?
-									timeLineBounds.width-maintimeStamp.width-1 : newPos;
+					mainTimestamp.x = (newPos < 0) ? 
+							0 : (newPos + mainTimestamp.width > timeLineBounds.width-1) ?
+									timeLineBounds.width-mainTimestamp.width-1 : newPos;
 					needRedraw();
-					xCurrentMousePos = arg0.x;
+					xCurrentMousePos = aME.x;
 				}
 				
 				if(markTwoIsClicked) {
-					newPos = maintimeStamp.width + arg0.x-xCurrentMousePos;
+					newPos = mainTimestamp.width + aME.x-xCurrentMousePos;
 					
-					maintimeStamp.width = (newPos < 0) ?
-							0 : (maintimeStamp.x + newPos > timeLineBounds.width-1) ?
-									timeLineBounds.width - maintimeStamp.x-1 : newPos;
+					mainTimestamp.width = (newPos < 0) ?
+							0 : (mainTimestamp.x + newPos > timeLineBounds.width-1) ?
+									timeLineBounds.width - mainTimestamp.x-1 : newPos;
 					needRedraw();
-					xCurrentMousePos = arg0.x;
+					xCurrentMousePos = aME.x;
 				}
 				
 				if(markOneIsClicked) {
-					newPos = maintimeStamp.x + (arg0.x-xCurrentMousePos);
-					newSize = maintimeStamp.width - (arg0.x-xCurrentMousePos);
+					newPos = mainTimestamp.x + (aME.x-xCurrentMousePos);
+					newSize = mainTimestamp.width - (aME.x-xCurrentMousePos);
 					
 					if(newPos >= 0 && newSize >= 0) {
-						maintimeStamp.x = newPos;
-						maintimeStamp.width = newSize;
+						mainTimestamp.x = newPos;
+						mainTimestamp.width = newSize;
 					}
 					needRedraw();
-					xCurrentMousePos = arg0.x;
+					xCurrentMousePos = aME.x;
 				}
 			}
 		});
 		
 		//Dynamic time line 
-//		Thread aTrackTh = new Thread(new Runnable() {
-//			@Override
-//			public void run() {
-//				while(!aThis.isDisposed()) {
-//					try {
-//						SongDescr aSong = parentKV.parentKE.song;
-//						if(aSong != null && aSong.kaiSrt != null) {
-//							int aKaiIdx = aSong.kaiSrt.getChunkIdx(parentKV.parentKE.playerVocals.getPositionMs());
-//							int aJustBef = aSong.kaiSrt.getChunkIdxJustBefore(parentKV.parentKE.playerVocals.getPositionMs());
-//							if(aKaiIdx != currentKaiIdx || aJustBef != currentKaiIdxJustBefore) {
-//								currentKaiIdx = aKaiIdx;
-//								currentKaiIdxJustBefore = aJustBef;
-//								needRedraw();
-//								parentKV.parentKE.logoPanel.needRedraw();
-//							}
-//						}
-//						Thread.sleep(10);
-//					} catch (Exception e) {
-//						e.printStackTrace(System.err);
-//					}
-//				}
-//			}
-//		});
-//		aTrackTh.start();
+		Thread aTrackTh = new Thread(new Runnable() {
+			@Override
+			public void run() {
+				//voir si le temps a changer, avec le stockage du temps précedant
+				while(!aThis.isDisposed()) {
+					if(aPlayerCurrentPosMS != parentKE.playerVocals.getPositionMs()) {
+						int aPlayerCurrentPosPxl = (int) ((aPlayerCurrentPosMS / scaleFactor)-(tStart / scaleFactor));
+						currentPlayTimeTriangle = new int[] {aPlayerCurrentPosPxl,SCALE_BAR_HEIGHT-2 , aPlayerCurrentPosPxl-5,SCALE_BAR_HEIGHT-12, aPlayerCurrentPosPxl+5,SCALE_BAR_HEIGHT-12};
+						aPlayerCurrentPosMS = parentKE.playerVocals.getPositionMs();
+						needRedraw();
+					}
+					try {
+						Thread.sleep(20);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+				}
+			}
+		});
+		aTrackTh.start();
 	}
 
 	@Override
@@ -437,38 +442,39 @@ public class KaiTimeLine extends TimedCanvas {
 				dblBufGC = new GC(dblBuf);
 			}
 			
+			dblBufGC.setClipping(timeLineBounds);
 			dblBufGC.setForeground(parentKDJ.whiteC);
 			dblBufGC.setBackground(parentKDJ.mainBckC);
 			dblBufGC.setFont(parentKDJ.kaiFont);
 			
 			//Drawing scaleBar
-			dblBufGC.fillRectangle(-1, -1, timeLineBounds.width+1, scaleBarHeight);
-			dblBufGC.drawRectangle(-1, -1, timeLineBounds.width+1, scaleBarHeight);
-			dblBufGC.setClipping(-1, -1, timeLineBounds.width+1, scaleBarHeight);
+			dblBufGC.fillRectangle(-1, -1, timeLineBounds.width+1, SCALE_BAR_HEIGHT);
+			dblBufGC.drawRectangle(-1, -1, timeLineBounds.width+1, SCALE_BAR_HEIGHT);
+			dblBufGC.setClipping(-1, -1, timeLineBounds.width+1, SCALE_BAR_HEIGHT);
 			
 			for (int i = 0; i < timeLineBounds.width; i++) {
-				if (i % 25 == 0) dblBufGC.drawLine(i, scaleBarHeight, i, 35);
+				if (i % 25 == 0) dblBufGC.drawLine(i, SCALE_BAR_HEIGHT, i, 35);
 				if (i % 100 == 0) {
-					dblBufGC.drawLine(i, scaleBarHeight, i, 25);
-					dblBufGC.drawText(ChunkStr.getTimeFormatFromMs(Tstart + i*Z), i, 0);
+					dblBufGC.drawLine(i, SCALE_BAR_HEIGHT, i, 25);
+					dblBufGC.drawText(ChunkStr.getTimeFormatFromMs(tStart + i*scaleFactor), i, 0);
 				}
 			}
 			
 			//Drawing under scale bar content
-			dblBufGC.setClipping(0, scaleBarHeight, timeLineBounds.width+1, 200);
+			dblBufGC.setClipping(0, SCALE_BAR_HEIGHT, timeLineBounds.width+1, 200);
 			
 			//Background
 			dblBufGC.setForeground(parentKDJ.blackC);
 			dblBufGC.setBackground(parentKDJ.secondBckC);
-			dblBufGC.fillRectangle(0, scaleBarHeight, timeLineBounds.width, chunkHeight);
+			dblBufGC.fillRectangle(0, SCALE_BAR_HEIGHT, timeLineBounds.width, CHUNK_HEIGHT);
 			dblBufGC.setBackground(parentKDJ.mainBckC);
-			dblBufGC.fillRectangle(0, firstLine, timeLineBounds.width, chunkHeight);
+			dblBufGC.fillRectangle(0, FIRST_LINE, timeLineBounds.width, CHUNK_HEIGHT);
 			dblBufGC.setBackground(parentKDJ.secondBckC);
-			dblBufGC.fillRectangle(0, secondLine, timeLineBounds.width, chunkHeight+2);
+			dblBufGC.fillRectangle(0, SECOND_LINE, timeLineBounds.width, CHUNK_HEIGHT+2);
 			
 			dblBufGC.setClipping(timeLineBounds);
 			
-			if(song.kaiSrt != null && currentKaiIdx != -1) {
+			if(song.kaiSrt != null && currentKaiIdx >= 0) {
 				
 				dblBufGC.setBackground(parentKDJ.logoLightC);
 				dblBufGC.setForeground(parentKDJ.blackC);
@@ -477,9 +483,9 @@ public class KaiTimeLine extends TimedCanvas {
 				//Checking to draw the chunk before
 				if (currentKaiIdx > 0) {
 					int i = currentKaiIdx-1;
-					int xChunkBefore = (int) ((song.kaiSrt.chunks.get(i).getStartTime() / Z)-(Tstart / Z));
-					int widthChunkBefore = (int) ((song.kaiSrt.chunks.get(i).getEndTime() / Z)-(Tstart / Z)) - xChunkBefore;
-					Rectangle chunkBefore = new Rectangle(xChunkBefore, scaleBarHeight , widthChunkBefore, chunkHeight);
+					int xChunkBefore = (int) ((song.kaiSrt.chunks.get(i).getStartTime() / scaleFactor)-(tStart / scaleFactor));
+					int widthChunkBefore = (int) ((song.kaiSrt.chunks.get(i).getEndTime() / scaleFactor)-(tStart / scaleFactor)) - xChunkBefore;
+					Rectangle chunkBefore = new Rectangle(xChunkBefore, SCALE_BAR_HEIGHT , widthChunkBefore, CHUNK_HEIGHT);
 					
 					dblBufGC.setClipping(chunkBefore);
 					dblBufGC.fillRectangle(chunkBefore);
@@ -489,16 +495,15 @@ public class KaiTimeLine extends TimedCanvas {
 					} else {
 						dblBufGC.drawText(song.kaiSrt.chunks.get(i).getText(), chunkBefore.x+1, chunkBefore.y);
 					}
-					
 				}
 				
 				//Checking to draw the chunk after
 				if (currentKaiIdx < song.kaiSrt.chunks.size()-1) {
 					int i = currentKaiIdx+1;
-					int xChunkAfter = (int) ((song.kaiSrt.chunks.get(i).getStartTime() / Z)-(Tstart / Z));
-					int widthChunkAfter = (int) ((song.kaiSrt.chunks.get(i).getEndTime() / Z)-(Tstart / Z)) - xChunkAfter;
+					int xChunkAfter = (int) ((song.kaiSrt.chunks.get(i).getStartTime() / scaleFactor)-(tStart / scaleFactor));
+					int widthChunkAfter = (int) ((song.kaiSrt.chunks.get(i).getEndTime() / scaleFactor)-(tStart / scaleFactor)) - xChunkAfter;
 					
-					Rectangle chunkBefore = new Rectangle(xChunkAfter, secondLine , widthChunkAfter, chunkHeight);
+					Rectangle chunkBefore = new Rectangle(xChunkAfter, SECOND_LINE , widthChunkAfter, CHUNK_HEIGHT);
 					dblBufGC.setClipping(chunkBefore);
 					dblBufGC.fillRectangle(chunkBefore);
 					dblBufGC.drawText(song.kaiSrt.chunks.get(i).getText(), chunkBefore.x+1, chunkBefore.y);
@@ -506,33 +511,39 @@ public class KaiTimeLine extends TimedCanvas {
 				
 				//Drawing main chunk rectangle
 				dblBufGC.setClipping(timeLineBounds);
-				dblBufGC.setForeground(parentKDJ.redC);
+				dblBufGC.setForeground(parentKDJ.whiteC);
 				
 				//Red Hook
-				dblBufGC.drawRectangle(maintimeStamp.x - 6, firstLine+16, 6, 34);
-				dblBufGC.setClipping(maintimeStamp.x + maintimeStamp.width, firstLine, 50, maintimeStamp.height);
-				dblBufGC.drawRectangle(maintimeStamp.x+ maintimeStamp.width-6, firstLine+16, 12, 34);
+				dblBufGC.drawRectangle(mainTimestamp.x - 6, FIRST_LINE+16, 6, 34);
+				dblBufGC.setClipping(mainTimestamp.x + mainTimestamp.width, FIRST_LINE, 50, mainTimestamp.height);
+				dblBufGC.drawRectangle(mainTimestamp.x+ mainTimestamp.width-6, FIRST_LINE+16, 12, 34);
 
 				dblBufGC.setBackground(parentKDJ.logoDarkC);
 				dblBufGC.setForeground(parentKDJ.whiteC);
-				dblBufGC.setClipping(maintimeStamp);
-				dblBufGC.fillRectangle(maintimeStamp);
-				if(maintimeStamp.x < -10) {
-					dblBufGC.drawText(song.kaiSrt.chunks.get(currentKaiIdx).getText(), -10, maintimeStamp.y);
+				dblBufGC.setClipping(mainTimestamp);
+				dblBufGC.fillRectangle(mainTimestamp);
+				if(mainTimestamp.x < -10) {
+					dblBufGC.drawText(song.kaiSrt.chunks.get(currentKaiIdx).getText(), -10, mainTimestamp.y);
 				} else {
-					dblBufGC.drawText(song.kaiSrt.chunks.get(currentKaiIdx).getText(), maintimeStamp.x+1, maintimeStamp.y);
+					dblBufGC.drawText(song.kaiSrt.chunks.get(currentKaiIdx).getText(), mainTimestamp.x+1, mainTimestamp.y);
 				}
 				
 				//Drawing red limits
 				dblBufGC.setClipping(timeLineBounds);
+				dblBufGC.setForeground(parentKDJ.whiteC);
+				dblBufGC.drawLine(mainTimestamp.x, SECOND_LINE-1, mainTimestamp.x, SCALE_BAR_HEIGHT);
+				dblBufGC.drawLine(mainTimestamp.x + mainTimestamp.width, SECOND_LINE-1, mainTimestamp.x + mainTimestamp.width, SCALE_BAR_HEIGHT);
+				
+				//Current play time
+				dblBufGC.setBackground(parentKDJ.redC);
 				dblBufGC.setForeground(parentKDJ.redC);
-				dblBufGC.drawLine(maintimeStamp.x, secondLine-1, maintimeStamp.x, scaleBarHeight);
-				dblBufGC.drawLine(maintimeStamp.x + maintimeStamp.width, secondLine-1, maintimeStamp.x + maintimeStamp.width, scaleBarHeight);
+				dblBufGC.fillPolygon(currentPlayTimeTriangle);
+				dblBufGC.drawLine(currentPlayTimeTriangle[0], SCALE_BAR_HEIGHT, currentPlayTimeTriangle[0], timeLineBounds.height);
 				
 				dblBufGC.setForeground(parentKDJ.whiteC);
 				dblBufGC.setBackground(parentKDJ.mainBckC);
-				if (markTwoIsClicked || mainChunkIsClicked) dblBufGC.drawText(ChunkStr.getTimeFormatFromMs((Tstart/Z+maintimeStamp.x+maintimeStamp.width)*Z),maintimeStamp.x+maintimeStamp.width + 10, firstLine+5 );
-				if (markOneIsClicked || mainChunkIsClicked)	dblBufGC.drawText(ChunkStr.getTimeFormatFromMs((Tstart/Z+maintimeStamp.x)*Z),maintimeStamp.x-57, firstLine+5 );
+				if (markTwoIsClicked || mainChunkIsClicked) dblBufGC.drawText(ChunkStr.getTimeFormatFromMs((tStart/scaleFactor+mainTimestamp.x+mainTimestamp.width)*scaleFactor),mainTimestamp.x+mainTimestamp.width + 10, FIRST_LINE+5 );
+				if (markOneIsClicked || mainChunkIsClicked)	dblBufGC.drawText(ChunkStr.getTimeFormatFromMs((tStart/scaleFactor+mainTimestamp.x)*scaleFactor),mainTimestamp.x-57, FIRST_LINE+5 );
 				
 				//Menu
 				dblBufGC.setForeground(parentKDJ.secondBckC);
@@ -585,19 +596,21 @@ public class KaiTimeLine extends TimedCanvas {
 	
 	
 	/**
-	 * Different type of events before a new redraw
-	 * @param event
+	 * Different type of events before a new redraw :
+	 * - 1 for Editor modifications
+	 * - 2 for a Scale factor modification
+	 * - 3 for initialization
+	 * @param int
 	 */
-	public void needRedraw(String event) {
+	public void needRedraw(int event) {
 		switch (event) {
 		// redrawing after key press event on the text editor
-		case "editor":
+		case 1:
 			checkForCurrentChunkIndex();
 			break;
-		// recalculating scale factor before redrawing
-		case "recalculateZ":
+		case 2:
 			break;
-		case "init":
+		case 3:
 			currentKaiIdx = 0;
 			break;
 		default:
@@ -628,12 +641,12 @@ public class KaiTimeLine extends TimedCanvas {
 	 */
 
 	public Long getZ() {
-		return Z;
+		return scaleFactor;
 	}
 
 	public void setZ(Long z) {
-		Z = z;
-		needRedraw("recalculateZ");
+		scaleFactor = z;
+		needRedraw(2);
 	}
 	
 	private void increaseZ() {

@@ -560,7 +560,7 @@ public class KaiEditor {
 	
 	void seek(long aTimeMS) {
 		
-		//Ajout boolean pour savoir si des threads sont déjà en cours d'execution
+		//flag to avoid multiple thread execution that can desynchronize players (mainly used in the time line menu, advance and forward buttons)
 		currentlySeeking = true;
 		
 		Thread aTh = new Thread(new Runnable() {
@@ -1058,7 +1058,7 @@ public class KaiEditor {
 //						editorContentHistory.add(editor.getText().replaceAll("\r*\n","\n"));
 						editorContentHistory.add(editor.getText());
 						song.kaiSrt.setLinesChunk(editor.getText());
-						kaiTimeLine.needRedraw("init");
+						kaiTimeLine.needRedraw(3);
 					}
 				}
 			});
@@ -1169,7 +1169,7 @@ public class KaiEditor {
 		if (notCtrlPressed) {
 			viewer.screener.needRedraw();
 			logoPanel.needRedraw();
-			kaiTimeLine.needRedraw("editor");
+			kaiTimeLine.needRedraw(1);
 		}
 	}
 	
