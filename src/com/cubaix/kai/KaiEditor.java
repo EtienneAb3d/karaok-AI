@@ -558,7 +558,7 @@ public class KaiEditor {
 		aTh.start();
 	}
 	
-	void seek(long aTimeMS) {
+	void seek(long aTimeMS, boolean aBitBefore) {
 		
 		//flag to avoid multiple thread execution that can desynchronize players (mainly used in the time line menu, advance and forward buttons)
 		currentlySeeking = true;
@@ -573,7 +573,15 @@ public class KaiEditor {
 					togglePlay();
 				}
 				
-				final long aBitBef = 500;
+				long aTimeBeofore;
+				if(aBitBefore) {
+					aTimeBeofore = 500;
+				} else {
+					aTimeBeofore = 0;
+				}
+				
+				final long aBitBef = aTimeBeofore;
+				
 				final boolean[] aDone = new boolean[] {false,false,false,false}; 
 				Thread aThVocals = new Thread(new Runnable() {
 					@Override
@@ -808,7 +816,7 @@ public class KaiEditor {
 						+Integer.parseInt(aHMS[8]);
 				
 				
-				seek(aTimeMS);
+				seek(aTimeMS,true);
 				kaiTimeLine.timestampClickHandler(aTimeMS, aTimeEndMS);
 //				int aClickedPos = playerVocals.progessBarR.x
 //						+(int)(playerVocals.progessBarR.width * aTimeMS / (double)playerVocals.getDurationTimeMs());
