@@ -81,6 +81,7 @@ public class KaiTimeLine extends TimedCanvas {
 	
 	private int indexToGo = -1;
 	protected boolean scaleBarIsClicked;
+	protected boolean wasPlaying = false;
 	
 
 	public KaiTimeLine(KaiEditor parentKE, Composite parent, int style) {
@@ -196,7 +197,10 @@ public class KaiTimeLine extends TimedCanvas {
 						//Scalebar
 						cursorOnScaleBar) {
 					aThis.setCursor(new Cursor(parentKDJ.display,SWT.CURSOR_SIZEE));
-					if(parentKE.playerVocals.playState == 1) parentKE.togglePlay();
+					if(parentKE.playerVocals.playState == 1) {
+						wasPlaying  = true;
+						parentKE.togglePlay();
+					}
 					currentPlayTimeTriangle = new int[] {aME.x,SCALE_BAR_HEIGHT-2 , aME.x-5,SCALE_BAR_HEIGHT-12, aME.x+5,SCALE_BAR_HEIGHT-12};
 					scaleBarIsClicked = true;
 					return true;
@@ -256,12 +260,19 @@ public class KaiTimeLine extends TimedCanvas {
 					
 					needRedraw();
 					xCurrentMousePos = -1;
+					
 				} else if (scaleBarIsClicked) {
 					aThis.setCursor(new Cursor(parentKDJ.display,SWT.CURSOR_ARROW));
 					aPlayerCurrentPosMS = (tStart/scaleFactor+aME.x)*scaleFactor;
 					parentKE.seek(aPlayerCurrentPosMS, false);
 					currentPlayTimeTriangle = new int[] {aME.x,SCALE_BAR_HEIGHT-2 , aME.x-5,SCALE_BAR_HEIGHT-12, aME.x+5,SCALE_BAR_HEIGHT-12};
 					scaleBarIsClicked = false;
+					
+					//Gain problem here
+					if (wasPlaying) {
+						parentKE.togglePlay();
+						wasPlaying = false;
+					}
 					needRedraw();
 				}
 			}
@@ -368,8 +379,8 @@ public class KaiTimeLine extends TimedCanvas {
 		aSeekTrackTh.start();
 		
 		/**
-		 * Listening mouse moves only when the chunk or handles are clicked
-		 * and manage new chunk position
+		 * Listening mouse moves when the chunk or handles are clicked
+		 * and manage new chunk position (also for ScaleBar and red cursor)
 		 * 
 		 * Constraints :
 		 * 	- Chunk cannot be moved out of the time line bounds
@@ -387,7 +398,7 @@ public class KaiTimeLine extends TimedCanvas {
 					yCurrentMousePos = aME.y;
 					needRedraw();
 				}
-				if(aME.y < 25 || aME.y > SCALE_BAR_HEIGHT) {
+				if(aME.y < 2 || aME.y > SCALE_BAR_HEIGHT) {
 					cursorOnScaleBar = false;
 					needRedraw();
 				}
@@ -436,6 +447,7 @@ public class KaiTimeLine extends TimedCanvas {
 				while(!aThis.isDisposed()) {
 					if(aPlayerCurrentPosMS != parentKE.playerVocals.getPositionMs() && parentKE.playerVocals.playState == 1) {
 						int aPlayerCurrentPosPxl = (int) ((aPlayerCurrentPosMS / scaleFactor)-(tStart / scaleFactor));
+						
 						currentPlayTimeTriangle = new int[] {aPlayerCurrentPosPxl,SCALE_BAR_HEIGHT-2 , aPlayerCurrentPosPxl-5,SCALE_BAR_HEIGHT-12, aPlayerCurrentPosPxl+5,SCALE_BAR_HEIGHT-12};
 						aPlayerCurrentPosMS = parentKE.playerVocals.getPositionMs();
 						needRedraw();
