@@ -31,7 +31,7 @@ public class ConfigLoader {
 			aXOs.add(new XObject("\n", XObject.PUNCT));
 			//String aDecal = "\t";
 
-			aXOs.add(new XTag("<user email=\"" + parentJDJ.userEMail + "\" code=\"" + parentJDJ.userCode + "\">"));
+			aXOs.add(new XTag("<user email=\"" + parentJDJ.userEMail + "\" code=\"" + parentJDJ.userCode + "\" welcomed=\"true\">"));
 			aXOs.add(new XObject("\n", XObject.PUNCT));
 
 			aXOs.add(new XTag("<soundcard1 id=\"" + parentJDJ.soundCard1 + "\">"));
@@ -65,6 +65,9 @@ public class ConfigLoader {
 				if (aXTag.tagName.equalsIgnoreCase("user")) {
 					parentJDJ.userEMail = aXTag.getValue("email");
 					parentJDJ.userCode = aXTag.getValue("code");
+					if(aXTag.getValue("welcomed") != null) {
+						parentJDJ.welcomed = true;
+					}
 				}
 				else if (aXTag.tagName.equalsIgnoreCase("soundcard1")) {
 					parentJDJ.soundCard1 = Integer.parseInt(aXTag.getValue("id"));

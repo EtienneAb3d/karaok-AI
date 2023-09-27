@@ -3,7 +3,7 @@
 
 karaok-AI lyrics and timestamps editor:
 
-<img src="https://github.com/EtienneAb3d/karaok-AI/blob/main/Screenshots/kAI.png?raw=true"/>
+<img src="https://github.com/EtienneAb3d/karaok-AI/blob/main/Screenshots/kAI-GUI.png?raw=true"/>
 
 karaok-AI screener with synchronized lyrics:
 

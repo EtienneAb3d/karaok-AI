@@ -45,7 +45,7 @@ import com.cubaix.kaiDJ.xml.ConfigLoader;
 
 // Main class, for all in JDJ
 public class KaiDJ {
-	static final public String _VERSION = "0.6.2";
+	static final public String _VERSION = "0.6.3";
 
 	static public boolean _SIZE_FOR_SCREENSHOTS = false;
 	static final public int _SIZE_FOR_SCREENSHOTS_W = 1024;
@@ -67,6 +67,7 @@ public class KaiDJ {
 	
 	public String userEMail = "";
 	public String userCode = "";
+	public boolean welcomed = false;
 
 	// Colors
 	public Color whiteC;
@@ -1003,6 +1004,14 @@ public class KaiDJ {
 			createInterface();
 			// Load config
 			ConfigLoader.load(this, configPath);
+			if(!welcomed) {
+				//Create first config file
+				ConfigLoader.save(this, configPath);
+				try {
+					BrowserControl.displayURL("https://karaok-ai.neurospell.com/welcome.php");
+				} catch (Exception e) {
+				}
+			}
 			display.asyncExec(new Runnable() {
 				public void run() {
 					//EM 03/06/2008 : default sound card = Java

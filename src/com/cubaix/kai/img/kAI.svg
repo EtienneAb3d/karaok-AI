@@ -9,7 +9,7 @@
    id="svg5"
    inkscape:version="1.1.2 (0a00cf5339, 2022-02-04)"
    sodipodi:docname="kAI.svg"
-   inkscape:export-filename="/home/cubaix/GITREPO/karaok-AI/src/com/cubaix/kai/img/LogoSmall.png"
+   inkscape:export-filename="/home/cubaix/GITREPO/karaok-AI/src/com/cubaix/kai/img/LogoSquareL.png"
    inkscape:export-xdpi="25.4"
    inkscape:export-ydpi="25.4"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
@@ -28,8 +28,8 @@
      showgrid="false"
      units="mm"
      inkscape:zoom="1.2151235"
-     inkscape:cx="283.51029"
-     inkscape:cy="232.07518"
+     inkscape:cx="234.95554"
+     inkscape:cy="139.90347"
      inkscape:window-width="1920"
      inkscape:window-height="1034"
      inkscape:window-x="0"
@@ -43,6 +43,13 @@
      id="layer2"
      inkscape:label="Icon"
      style="display:inline">
+    <rect
+       style="fill:#ffffff;fill-opacity:1;stroke-width:13.6839"
+       id="rect857"
+       width="180"
+       height="180"
+       x="-15"
+       y="-48" />
     <text
        xml:space="preserve"
        style="font-style:normal;font-weight:normal;font-size:105.833px;line-height:1.25;font-family:sans-serif;fill:#792c7d;fill-opacity:1;stroke:#e2b8e4;stroke-width:3;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
