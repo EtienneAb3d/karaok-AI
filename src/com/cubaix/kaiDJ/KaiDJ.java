@@ -45,7 +45,7 @@ import com.cubaix.kaiDJ.xml.ConfigLoader;
 
 // Main class, for all in JDJ
 public class KaiDJ {
-	static final public String _VERSION = "0.6.2";
+	static final public String _VERSION = "0.7.0 beta";
 
 	static public boolean _SIZE_FOR_SCREENSHOTS = false;
 	static final public int _SIZE_FOR_SCREENSHOTS_W = 1024;
