@@ -5,9 +5,12 @@ karaok-AI lyrics and timestamps editor:
 
 <img src="https://github.com/EtienneAb3d/karaok-AI/blob/main/Screenshots/kAI-GUI.png?raw=true"/>
 
-karaok-AI screener with synchronized lyrics:
+karaok-AI **screener** with synchronized lyrics:
 
 <img src="https://github.com/EtienneAb3d/karaok-AI/blob/main/Screenshots/kAI-screener.png?raw=true"/>
+
+Auto-extracted Vocals/Drums/Bass/Other stem **remixing** example:<br/>
+https://karaok-ai.neurospell.com/karaok-AI-DemoKaty.mp4
 
 karaok-AI is using WhisperHallu and WhisperTimeSync to extract vocals and lyrics:<br/>
 https://github.com/EtienneAb3d/WhisperHallu <br/>
