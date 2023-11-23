@@ -1,7 +1,7 @@
 # karaok-AI
 **karaok-AI** is a karaoke Player / Editor with automatic clip creation from any song file using vocals and lyrics extraction (Speech-to-Text).
 
-karaok-AI lyrics and timestamps editor:
+karaok-AI lyrics and timestamps **editor**:
 
 <img src="https://github.com/EtienneAb3d/karaok-AI/blob/main/Screenshots/kAI-GUI.png?raw=true"/>
 
