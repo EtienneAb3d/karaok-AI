@@ -9,7 +9,7 @@ karaok-AI **screener** with synchronized lyrics:
 
 <img src="https://github.com/EtienneAb3d/karaok-AI/blob/main/Screenshots/kAI-screener.png?raw=true"/>
 
-Lyrics auto-extract and edit example:
+Lyrics **auto-extract** and **edit** example:
 
 [![Lyrics auto-extract and edit example](https://github.com/EtienneAb3d/karaok-AI/assets/25932245/7e688c83-ac3b-4eaf-b038-58df7161c09a)](https://karaok-ai.neurospell.com/karaok-AI-DemoLady.mp4)
 
