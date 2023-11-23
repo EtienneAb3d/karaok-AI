@@ -9,8 +9,13 @@ karaok-AI **screener** with synchronized lyrics:
 
 <img src="https://github.com/EtienneAb3d/karaok-AI/blob/main/Screenshots/kAI-screener.png?raw=true"/>
 
-Auto-extracted Vocals/Drums/Bass/Other stem **remixing** example:<br/>
-https://karaok-ai.neurospell.com/karaok-AI-DemoKaty.mp4
+Lyrics auto-extract and edit example:
+
+[![Lyrics auto-extract and edit example](https://github.com/EtienneAb3d/karaok-AI/assets/25932245/7e688c83-ac3b-4eaf-b038-58df7161c09a)](https://karaok-ai.neurospell.com/karaok-AI-DemoLady.mp4)
+
+Auto-extracted Vocals/Drums/Bass/Other stem **remixing** example:
+
+[![Lyrics auto-extract and edit example](https://github.com/EtienneAb3d/karaok-AI/assets/25932245/7e688c83-ac3b-4eaf-b038-58df7161c09a)](https://karaok-ai.neurospell.com/karaok-AI-DemoKaty.mp4)
 
 karaok-AI is using WhisperHallu and WhisperTimeSync to extract vocals and lyrics:<br/>
 https://github.com/EtienneAb3d/WhisperHallu <br/>
